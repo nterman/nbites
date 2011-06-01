@@ -83,6 +83,7 @@ SET( SYNCHRO_SRCS synchro
 ########### ROBOT CONNECT #########
 SET( ROBOT_CONNECT_SRCS
   AccEKF
+  AngleEKF
   RoboGuardian
   ClickableButton
   PyRoboGuardian

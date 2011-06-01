@@ -55,7 +55,7 @@ private:
     const float scale(const float);
     const float getVariance(float, float);
 
-private: // Constants
+private: // ConstantsangleX
     static const int num_dimensions;
     static const float beta;
     static const float gamma;

@@ -110,11 +110,7 @@ void NaoPose::transform() {
 
     ublas::matrix<float> supportLegToBodyTransform;
 
-    //support leg is determined by which leg is further from the body!
-    //this should be changed in one or more of the following ways:
-    //   * ask the walk engine for the support leg. (doesnt work in cortex)
-    //   * ask the gyros/accelerometers for which way is down (doesnt work yet)
-    //if (lLegDistance > rLegDistance) {
+    //support leg is determined by the motion engine
     if (sensors->getSupportFoot() == LEFT_SUPPORT) {
         supportLegToBodyTransform = calculateForwardTransform(LLEG_CHAIN,
                                                               lLegAngles);
@@ -140,16 +136,18 @@ void NaoPose::transform() {
     // **************************
     // We need the inverse but we calculate the transpose because they are
     // equivalent for orthogonal matrices and transpose is faster.
-     ublas::matrix<float>bodyToWorldTransform=trans(supportLegToBodyTransform);
+    ublas::matrix<float>bodyToWorldTransform=trans(supportLegToBodyTransform);
     // **************************
     // End old code
     // **************************
 
+	// update the AngleEKF that Sensors maintains with joint data
+	sensors->setTorsoAnglesFromPose(0, 0);
 
-    // At this time we trust inertial
-    const Inertial inertial = sensors->getInertial();
-    bodyInclinationX = inertial.angleX;
-    bodyInclinationY = inertial.angleY;
+     // Now we can trust the inertial's angleX/Y
+	const Inertial inertial = sensors->getInertial();
+	bodyInclinationX = inertial.angleX;
+	bodyInclinationY = inertial.angleY;
 
     //cout<<"inertial.x "<<bodyInclinationX<<" y: "<<bodyInclinationY<<endl;
 
@@ -159,7 +157,7 @@ void NaoPose::transform() {
    //              CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
    //                                           bodyInclinationX));
 
-    ublas::vector<float> torsoLocationInLegFrame = prod(bodyToWorldTransform,
+	ublas::vector<float> torsoLocationInLegFrame = prod(bodyToWorldTransform,
                                                         supportLegLocation);
     // get the Z component of the location
     comHeight = -torsoLocationInLegFrame[Z];

@@ -58,6 +58,7 @@ Sensors::Sensors ()
       leftFootBumper(0.0f, 0.0f),
       rightFootBumper(0.0f, 0.0f),
       inertial(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+	  angleEKF(),
       ultraSoundDistanceLeft(0.0f), ultraSoundDistanceRight(0.0f),
       yImage(&global_image[0]), uvImage(&global_image[0]),
       colorImage(reinterpret_cast<uint8_t*>(&global_image[0])),
@@ -66,7 +67,7 @@ Sensors::Sensors ()
       unfilteredInertial(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
       chestButton(0.0f),batteryCharge(0.0f),batteryCurrent(0.0f),
       FRM_FOLDER("/home/nao/naoqi/frames"),
-	  saving_frames_on(false)
+      saving_frames_on(false)
 {
     pthread_mutex_init(&angles_mutex, NULL);
     pthread_mutex_init(&vision_angles_mutex, NULL);
@@ -561,6 +562,9 @@ void Sensors::setInertial(const float accX, const float accY, const float accZ,
 
     inertial = Inertial(accX, accY, accZ, gyrX, gyrY, angleX, angleY);
 
+	// maybe should reset the angleX/Y EKF? but this function is never used
+	angleEKF.update(inertial.angleX, inertial.angleY);
+
     pthread_mutex_unlock (&inertial_mutex);
 }
 
@@ -569,6 +573,9 @@ void Sensors::setInertial (const Inertial &v)
     pthread_mutex_lock (&inertial_mutex);
 
     inertial = v;
+
+	// maybe should reset the angleX/Y EKF? but this function is never used
+	angleEKF.update(inertial.angleX, inertial.angleY);
 
     pthread_mutex_unlock (&inertial_mutex);
 }
@@ -633,6 +640,9 @@ void Sensors::setMotionSensors (const FSR &_leftFoot, const FSR &_rightFoot,
     inertial = _inertial;
     unfilteredInertial = _unfilteredInertial;
 
+	// have to update the torso angle X/Y kalman filter
+	angleEKF.update(inertial.angleX, inertial.angleY);
+
     pthread_mutex_unlock(&unfiltered_inertial_mutex);
     pthread_mutex_unlock(&inertial_mutex);
     pthread_mutex_unlock(&fsr_mutex);
@@ -662,7 +672,19 @@ void Sensors::setVisionSensors (const FootBumper &_leftBumper,
     pthread_mutex_unlock(&ultra_sound_mutex);
     pthread_mutex_unlock (&button_mutex);
     pthread_mutex_unlock (&battery_mutex);
+}
 
+void Sensors::setTorsoAnglesFromPose(const float _angleX, const float _angleY) {
+	pthread_mutex_lock (&inertial_mutex);
+
+	// add to the filter
+	angleEKF.update(_angleX, _angleY);
+
+	// and update our stored inertial
+	inertial.angleX = angleEKF.getAngleX();
+	inertial.angleY = angleEKF.getAngleY();
+
+	pthread_mutex_unlock (&inertial_mutex);
 }
 
 void Sensors::setAllSensors (vector<float> sensorValues) {
@@ -678,32 +700,35 @@ void Sensors::setAllSensors (vector<float> sensorValues) {
     // a better way to assign these so that it's checked at compile time
     // please do!
 
-	// foot force sensors
+    // foot force sensors
     leftFootFSR = FSR(sensorValues[FSR_LEFT_F_L], sensorValues[FSR_LEFT_F_R],
                       sensorValues[FSR_LEFT_B_L], sensorValues[FSR_LEFT_B_R]);
     rightFootFSR = FSR(sensorValues[FSR_RIGHT_F_L], sensorValues[FSR_RIGHT_F_R],
                        sensorValues[FSR_RIGHT_B_L], sensorValues[FSR_RIGHT_B_R]);
 
-	// foot bumpers
+    // foot bumpers
     leftFootBumper = FootBumper(sensorValues[BUMPER_LEFT_L],
-								sensorValues[BUMPER_LEFT_R]);
+                                sensorValues[BUMPER_LEFT_R]);
     rightFootBumper = FootBumper(sensorValues[BUMPER_RIGHT_L],
-								 sensorValues[BUMPER_RIGHT_R]);
+                                 sensorValues[BUMPER_RIGHT_R]);
 
     inertial = Inertial(sensorValues[ACC_X], // accelerometers
-						sensorValues[ACC_Y],
-						sensorValues[ACC_Z],
+                        sensorValues[ACC_Y],
+                        sensorValues[ACC_Z],
                         sensorValues[GYRO_X],  // gyros
-						sensorValues[GYRO_Y],
+                        sensorValues[GYRO_Y],
                         sensorValues[ANGLE_X], // angleX/angleY
-						sensorValues[ANGLE_Y]);
+                        sensorValues[ANGLE_Y]);
 
-	// sonar
+	// update the filter
+	angleEKF.update(inertial.angleX, inertial.angleY);
+
+    // sonar
     ultraSoundDistanceLeft = sensorValues[SONAR_LEFT];
     ultraSoundDistanceRight = sensorValues[SONAR_RIGHT];
 
     supportFoot =
-		static_cast<SupportFoot>(static_cast<int>(sensorValues[SUPPORT_FOOT]));
+        static_cast<SupportFoot>(static_cast<int>(sensorValues[SUPPORT_FOOT]));
 
     pthread_mutex_unlock (&support_foot_mutex);
     pthread_mutex_unlock (&ultra_sound_mutex);

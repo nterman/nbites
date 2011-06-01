@@ -17,18 +17,13 @@ AngleEKF::AngleEKF()
     A_k(0,0) = 1.0;
     A_k(1,1) = 1.0;
 
-
     // Set default values for the angles
     xhat_k(0) = 0.0f;
     xhat_k(1) = 0.0f;
 
-
     //Set uncertainties
     P_k(0,0) = -GRAVITY_mss;
     P_k(1,1) = -GRAVITY_mss;
-    //    P_k(2,2) = -GRAVITY_mss;
-
-
 }
 
 AngleEKF::~AngleEKF()
@@ -57,8 +52,9 @@ AngleEKF::associateTimeUpdate(int u_k)
 }
 
 const float AngleEKF::scale(const float x) {
-    //return .4f * std::pow(3.46572f, x);
     return 100.0f * std::pow(x, 5.0f) + 580.4f;
+
+    //return .4f * std::pow(3.46572f, x);
     // A bezier curve
     //return 6.73684f * std::pow(x,3) +
     //    37.8947f * std::pow(x,2) +
@@ -101,9 +97,9 @@ const float AngleEKF::getVariance(float delta, float divergence) {
 }
 
 void AngleEKF::incorporateMeasurement(AngleMeasurement z,
-                                    StateMeasurementMatrix &H_k,
-                                    MeasurementMatrix &R_k,
-                                    MeasurementVector &V_k)
+									  StateMeasurementMatrix &H_k,
+									  MeasurementMatrix &R_k,
+									  MeasurementVector &V_k)
 {
     static MeasurementVector last_measurement(
         ublas::scalar_vector<float>(num_dimensions, 0.0f));

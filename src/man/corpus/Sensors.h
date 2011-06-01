@@ -25,10 +25,10 @@
 #include <pthread.h>
 #include <stdint.h>
 
-
 #include "SensorDef.h"
 #include "NaoDef.h"
 #include "VisionDef.h"
+#include "AngleEKF.h"
 
 enum SupportFoot {
     LEFT_SUPPORT = 0,
@@ -62,7 +62,6 @@ enum SensorNames {
 };
 
 class Sensors;
-
 
 struct FSR {
 	FSR()
@@ -176,7 +175,6 @@ class Sensors {
     void setUnfilteredInertial(const Inertial &inertial);
     void setUltraSound(const float l_dist, const float r_dist);
     void setSupportFoot(const SupportFoot _supportFoot);
-
     void setMotionSensors(const FSR &_leftFoot, const FSR &_rightFoot,
                           const float chestButton,
                           const Inertial &_inertial,
@@ -188,6 +186,9 @@ class Sensors {
                           const float ultraSoundRight,
                           const float batteryCharge,
                           const float batteryCurrent);
+
+	// used by Pose to update Angle X/Y estimates
+	void setTorsoAnglesFromPose(const float angleX, const float angleY);
 
     // this method is very useful for serialization and parsing sensors
     void setAllSensors(const std::vector<float> sensorValues);
@@ -233,7 +234,6 @@ class Sensors {
 	bool isSavingFrames() const;
 
  private:
-
     void add_to_module();
 
     // Locking mutexes
@@ -270,6 +270,8 @@ class Sensors {
     FootBumper rightFootBumper;
     // Inertial sensors
     Inertial inertial;
+	// filter for gyro/pose integration
+	AngleEKF angleEKF;
     // Sonar sensors
     float ultraSoundDistanceLeft;
     float ultraSoundDistanceRight;
