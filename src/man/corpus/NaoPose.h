@@ -219,10 +219,19 @@ class NaoPose {
     //returns an 'estimate' object for a homogeneous vector pointing to an
     //object in the world frame
     static estimate getEstimate(boost::numeric::ublas::vector <float> objInWorldFrame);
-    // Usually our pix estimate is an overestimate of the distance to the pixel,
-    // so we have a fitting function which tries to correct the noise. This is
-    // that function.
-    static const float correctDistance(const float uncorrectedDist);
+
+	/**
+	 * Calculates the Euler Angles of a given matrix. Euler angles
+	 * provide an equivalent rotation, and can be calculated for any
+	 * transformation except a degenerate case when matrix[2][0] == +/-
+	 * 1.
+	 *
+	 * For more information, see:
+	 * http://www.gregslabaugh.name/publications/euler.pdf
+	 *
+	 * @return The Euler Angles of a matrix (the rotations the matrix performs)
+	 */
+	static ublas::vector<float> eulerAngles(ublas::matrix<float> rotation);
 
  protected: // members
     float bodyInclinationX;
