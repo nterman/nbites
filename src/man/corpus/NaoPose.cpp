@@ -130,42 +130,37 @@ void NaoPose::transform() {
 	//cout << "world to body:" << endl;
 	//cout << supportLegToBodyTransform << endl;
 
-    // **************************
-    // The code below is old but is kept around just in case the new code does
-    // not work. We used to get the body rotation using the leg transform, but
-    // now we use the accelerometers. The question is whether we should first
-    // apply the x rotation or the y one.
-    // **************************
-    // We need the inverse but we calculate the transpose because they are
-    // equivalent for orthogonal matrices and transpose is faster.
-    ublas::matrix<float>bodyToWorldTransform=trans(supportLegToBodyTransform);
-    // **************************
-    // End old code
-    // **************************
+	// Calculate bodyToWorld via pose.  We need the inverse but we
+    // calculate the transpose because they are equivalent for
+    // orthogonal matrices and transpose is faster.
+    ublas::matrix<float>bodyToWorldTransform_pose = trans(supportLegToBodyTransform);
 
 	/* Now that we've calculated body to world, we can put this information
 	 * into the torso angle EKF. Other components (eg motion) that use angleX/Y
 	 * will (hopefully) have a more accurate measure.
 	 * NOTE: this code runs at Vision's frame rate, so the EKF will get joint
-	 * data half as often as gyro sensors.
+	 * data half as often as gyro sensors. Still appears to help.
 	 */
-	ublas::vector<float> torsoAngles = eulerAngles(bodyToWorldTransform);
+	ublas::vector<float> torsoAngles = eulerAngles(bodyToWorldTransform_pose);
 
 	//cout << "euler angles:"<<  torsoAngles << endl;
 
+	// update the EKF in Sensors
 	sensors->setTorsoAnglesFromPose(torsoAngles[X_AXIS], torsoAngles[Y_AXIS]);
 
 	const Inertial inertial = sensors->getInertial();
+
+	// these values are now a filtered combination of gyro/pose data
 	bodyInclinationX = inertial.angleX;
 	bodyInclinationY = inertial.angleY;
 
 	//cout << "  inertial.x: " << bodyInclinationX << " y: " << bodyInclinationY <<endl;
 
- //   ublas::matrix<float> bodyToWorldTransform =
-  //          prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
- //                                         bodyInclinationY),
-   //              CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
-   //                                           bodyInclinationX));
+	ublas::matrix<float> bodyToWorldTransform =
+		prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
+									  bodyInclinationY),
+			 CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
+									  bodyInclinationX));
 
 	ublas::vector<float> torsoLocationInLegFrame = prod(bodyToWorldTransform,
                                                         supportLegLocation);
@@ -524,6 +519,8 @@ ublas::vector<float> NaoPose::eulerAngles(ublas::matrix<float> rotation) {
 	ublas::vector<float> angles = vector4D(0.0f, 0.0f, 0.0f);
 
 	float rot_x, rot_y, rot_z;
+
+	// this second set of angles is mathematically correct, but not useful
 	//float rot_x2, rot_y2, rot_z2;
 
 	// degenerate case
@@ -549,7 +546,7 @@ ublas::vector<float> NaoPose::eulerAngles(ublas::matrix<float> rotation) {
 		rot_z = NBMath::safe_atan2(rotation(1, 0)/cos_rot_y, rotation(0, 0)/cos_rot_y);
 		//rot_z2 = NBMath::safe_atan2(rotation(1, 0)/cos_rot_y2, rotation(0, 0)/cos_rot_y2);
 
-		printf("x: %f y: %f z: %f\n", rot_x, rot_y, rot_z);
+		//printf("x: %f y: %f z: %f\n", rot_x, rot_y, rot_z);
 
 		//printf("x: %f y: %f z: %f, x2: %f y2: %f z2: %f\n", rot_x, rot_y, rot_z,
 		//rot_x2, rot_y2, rot_z2);

@@ -1,5 +1,4 @@
 
-
 #include "AngleEKF.h"
 #include "BasicWorldConstants.h"
 using namespace boost::numeric;
@@ -8,7 +7,6 @@ const int AngleEKF::num_dimensions = ANGLE_NUM_DIMENSIONS;
 const float AngleEKF::beta = 3.0f;
 const float AngleEKF::gamma = 2.0f;
 const float AngleEKF::variance  = 0.22f;
-//const float AccEKF::variance  = 100.00f;
 
 AngleEKF::AngleEKF()
     : EKF<AngleMeasurement,int, num_dimensions, num_dimensions>(beta, gamma)
