@@ -45,6 +45,7 @@ typedef TTMan ALMan;
 #include "ALImageTranscriber.h"
 
 #include "NaoLights.h"
+#include "ALSpeech.h"
 
 using namespace std;
 using namespace AL;
@@ -58,17 +59,9 @@ static shared_ptr<ALTranscriber> transcriber;
 static shared_ptr<ALImageTranscriber> imageTranscriber;
 static shared_ptr<EnactorT> enactor;
 static shared_ptr<Lights> lights;
+static shared_ptr<Speech> speech;
 
 void ALCreateMan( ALPtr<ALBroker> broker){
-    try{
-        ALSentinelProxy sentinel(broker);
-        sentinel.enableDefaultActionSimpleClick(false);
-        sentinel.enableDefaultActionDoubleClick(false);
-        sentinel.enableDefaultActionTripleClick(false);
-    }catch(ALError &e){
-        cout << "Failed to access the ALSentinel: "<<e.toString()<<endl;
-    }
-
     synchro = shared_ptr<Synchro>(new Synchro());
     sensors = shared_ptr<Sensors>(new Sensors);
     transcriber = shared_ptr<ALTranscriber>(new ALTranscriber(broker,sensors));
@@ -76,8 +69,9 @@ void ALCreateMan( ALPtr<ALBroker> broker){
         shared_ptr<ALImageTranscriber>
         (new ALImageTranscriber(synchro, sensors, broker));
 
+    boost::shared_ptr<Profiler> profiler = shared_ptr<Profiler>(new Profiler(&micro_time));
 #ifdef USE_DCM
-    enactor = shared_ptr<EnactorT>(new EnactorT(sensors,
+    enactor = shared_ptr<EnactorT>(new EnactorT(profiler, sensors,
                                                 transcriber,broker));
 #else
     enactor = shared_ptr<EnactorT>(new EnactorT(sensors,synchro,
@@ -85,14 +79,18 @@ void ALCreateMan( ALPtr<ALBroker> broker){
 #endif
     lights = shared_ptr<Lights>(new NaoLights(broker));
 
+    speech = shared_ptr<Speech>(new ALSpeech(broker));
+
     //setLedsProxy(AL::ALPtr<AL::ALLedsProxy>(new AL::ALLedsProxy(broker)));
 
-    man = boost::shared_ptr<ALMan> (new ALMan(sensors,
-                                          transcriber,
-                                          imageTranscriber,
-                                          enactor,
+    man = boost::shared_ptr<ALMan> (new ALMan(profiler,
+                                              sensors,
+                                              transcriber,
+                                              imageTranscriber,
+                                              enactor,
                                               synchro,
-                                              lights));
+                                              lights,
+                                              speech));
     man->startSubThreads();
 }
 

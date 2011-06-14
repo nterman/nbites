@@ -58,7 +58,7 @@ public:
     const idType getID() const { return id; }
     const certainty getIDCertainty() const { return idCertainty; }
     const distanceCertainty getDistanceCertainty() const {
-        return distanceCert;
+      return distanceCert;
     }
     const ConcreteLandmark * getConcreteLandmark() const {
         return concreteLandmark;
