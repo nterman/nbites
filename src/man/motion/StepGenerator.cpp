@@ -185,9 +185,9 @@ void StepGenerator::findSensorZMP(){
 	/// @see NaoPose::transform() for another example
     const ufmatrix4 bodyToWorldTransform =
         prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
-									  inertial.angleY),
+									  -inertial.angleY),
 			 CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
-									  inertial.angleX));
+									  -inertial.angleX));
 
     // update the IIR filter
     acc_filter.update(inertial.accX,

@@ -158,9 +158,9 @@ void NaoPose::transform() {
 
 	ublas::matrix<float> bodyToWorldTransform =
 		prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
-									  bodyInclinationY),
+									  -bodyInclinationY),
 			 CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
-									  bodyInclinationX));
+									  -bodyInclinationX));
 
 	ublas::vector<float> torsoLocationInLegFrame = prod(bodyToWorldTransform,
                                                         supportLegLocation);
