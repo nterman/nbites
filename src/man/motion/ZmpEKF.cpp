@@ -80,8 +80,7 @@ void ZmpEKF::incorporateMeasurement(ZmpMeasurement z,
                                     MeasurementMatrix &R_k,
                                     MeasurementVector &V_k)
 {
-    static const float com_height  = 310; //TODO: Move this
-	float zheight_div_G = com_height/GRAVITY_mss;
+	const float zheight_div_G = z.comZ/GRAVITY_mss;
     static MeasurementVector last_measurement(
         ublas::scalar_vector<float>(measurementSize, 0.0f));
 

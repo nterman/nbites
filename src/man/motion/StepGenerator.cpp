@@ -227,6 +227,7 @@ void StepGenerator::findSensorZMP(){
     ZmpMeasurement pMeasure =
         //{joint_com_i_x, (joint_com_i_y + COM_I_Y_OFFSET),
 		{controller_x->getPosition(), controller_y->getPosition(),
+         pose->getBodyCenterHeight(),
 		 accel_i(0), accel_i(1)};
     zmp_filter.update(tUp,pMeasure);
 

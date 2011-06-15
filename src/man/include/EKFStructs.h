@@ -92,6 +92,7 @@ struct ZmpTimeUpdate{
 struct ZmpMeasurement {
     float comX;
     float comY;
+    float comZ;
     float accX;
     float accY;
 };
