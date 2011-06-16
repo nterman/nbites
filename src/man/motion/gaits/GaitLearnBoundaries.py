@@ -9,7 +9,7 @@
 
 stanceMin = (29.00,  #** CoM height
              -1.0,    #** Forward displacement of CoM
-             11.0,    #** Horizontal distance between feet
+             10.0,    #** Horizontal distance between feet
              0.0,    #** Body angle around y axis
              0.0,    # Angle between feet
              0.2)    # Time to transition to/from this stance
@@ -27,11 +27,11 @@ stepMin = (0.3,   #** step duration
            -15.0, #** step lift
            15.0,  # max x speed
            -10.0,  # max x speed
-           10.0,  #** max y speed
+           12.0,  # max y speed
            30.0,  # max theta speed()
            4.0,   # max x accel
            4.0,   # max y accel
-           20.0,  #** max theta speed()
+           30.0,  # max theta speed()
            1.0)   # walk gait = true
 
 stepMax = (0.5,   #** step duration
@@ -40,25 +40,25 @@ stepMax = (0.5,   #** step duration
            15.0,   #** step lift
            15.0,  # max x speed
            -10.0,  # max x speed
-           15.0,  # max y speed
+           12.0,  # max y speed
            30.0,  # max theta speed()
            4.0,   # max x accel
            4.0,   # max y accel
-           40.0,  #** max theta speed()
+           30.0,  #** max theta speed()
            1.0)   # walk gait = true
 
 zmpMin = (0.0,   # **footCenterLocX
           0.1,   # **zmp static percentage
           -0.5,   # **left zmp off ## like with hip hack, these are optimized in tandem
           0.4,   # right zmp off
-          0.01,  # strafe zmp offse
+          0.00,  # ** strafe zmp offse
           6.6)   # turn zmp offset
 
 zmpMax = (3.0,   #** footCenterLocX
           0.5,   # ** zmp static percentage
           1.0,   # **left zmp off
           0.4,   # right zmp off
-          0.01,  # strafe zmp offset
+          0.3,  # strafe zmp offset
           6.6)   # turn zmp offset
 
 # NOTE: only the second one of these gets optimized, since they have to be the same
