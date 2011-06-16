@@ -259,6 +259,7 @@ class Swarm:
         self.searchSpaceSize = self.calculateSearchSize()
 
         self.iterations = 0 # how many times every particle has moved
+        self.regroupings = 0 # "" redistributed the particles after convergence
 
         for i in range(0, numParticles):
             self.particles.append(Particle(nSpace, searchMins, searchMaxs))
@@ -309,6 +310,8 @@ class Swarm:
         (self.currSearchMins, self.currSearchMaxs) = self.calculateRegroupedRange()
 
         self.redistributeParticles()
+
+        self.regroupings += 1
 
     def calculateRegroupedRange(self):
         '''
@@ -438,8 +441,7 @@ class Swarm:
             print "regroup threshold: %s" % (self.searchSpaceSize*REGROUP_THRESH)
 
         if furthestParticleDistance < self.searchSpaceSize * REGROUP_THRESH:
-            if DEBUG:
-                print "Prematurely converged! Regrouping around current gBest"
+            print "Prematurely converged! Regrouping around current gBest"
             self.regroupSwarm()
 
     def calculateSearchSize(self):

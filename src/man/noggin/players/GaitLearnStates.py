@@ -158,6 +158,7 @@ def scoreGaitPerformance(player):
    particle. The PSO is saved (pickled) every time a particle is ticked
    '''
    stability = player.brain.stability
+   pso = player.swarm
 
    stability_penalty = stability.getStabilityHeuristic()
 
@@ -169,9 +170,13 @@ def scoreGaitPerformance(player):
    player.printf("robot stood for %s frames this run" % frames_stood)
    player.printf("stability penalty is %s" % stability_penalty)
    player.printf("heuristic for this run is %s" % heuristic)
+   player.printf("##### PSO INFO #####")
+   player.printf("particle has moved %s times" % pso.getCurrentParticle().moves)
+   player.printf("swarm has been regrouped %s times" % pso.regroupings)
+   player.printf("best gait found has heuristic %s" % pso.gBest)
 
-   player.swarm.getCurrentParticle().setHeuristic(heuristic)
-   player.swarm.tickCurrentParticle()
+   pso.getCurrentParticle().setHeuristic(heuristic)
+   pso.tickCurrentParticle()
    savePSO(player)
 
 def newOptimizeParameters(player):
@@ -218,6 +223,10 @@ def reportBestGait(player):
    bestGaitTuple = arrayToGaitTuple(bestGaitArray)
 
    player.printf("best found gait's heuristic score was: %s" % gaitScore)
+
+   if gaitScore < 0:
+      player.printf("Not writing gait, score is less than 0!")
+      return
 
    try:
       gaitScore = int(gaitScore)
