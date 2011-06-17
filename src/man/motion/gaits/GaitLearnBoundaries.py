@@ -10,37 +10,37 @@
 stanceMin = (29.00,  #** CoM height
              -1.0,    #** Forward displacement of CoM
              10.0,    #** Horizontal distance between feet
-             0.0,    #** Body angle around y axis
+             -1.0,    #** Body angle around y axis
              0.0,    # Angle between feet
              0.2)    # Time to transition to/from this stance
 
 stanceMax = (32.00, #** CoM height
              3.0,   #** Forward displacement of CoM
              12.0,  #** Horizontal distance between feet
-             8.0,  #** Body angle around y axis
+             4.0,  #** Body angle around y axis
              0.0,   # Angle between feet
              0.2)   # Time to transition to/from this stance
 
-stepMin = (0.3,   #** step duration
+stepMin = (0.36,   # step duration
            0.2,   #** fraction in double support
            1.0,   #** stepHeight
-           -15.0, #** step lift
-           15.0,  # max x speed
-           -10.0,  # max x speed
-           12.0,  # max y speed
+           -10.0, #** step lift
+           17.0,  # max x speed
+           -12.0,  # max x speed
+           14.0,  # max y speed
            30.0,  # max theta speed()
            4.0,   # max x accel
            4.0,   # max y accel
            30.0,  # max theta speed()
            1.0)   # walk gait = true
 
-stepMax = (0.5,   #** step duration
+stepMax = (0.36,   # step duration
            0.5,   #** fraction in double support
            5.0,   #** stepHeight
            15.0,   #** step lift
-           15.0,  # max x speed
-           -10.0,  # max x speed
-           12.0,  # max y speed
+           17.0,  # max x speed
+           -12.0,  # max x speed
+           14.0,  # max y speed
            30.0,  # max theta speed()
            4.0,   # max x accel
            4.0,   # max y accel
@@ -54,16 +54,16 @@ zmpMin = (0.0,   # **footCenterLocX
           0.00,  # ** strafe zmp offse
           6.6)   # turn zmp offset
 
-zmpMax = (3.0,   #** footCenterLocX
+zmpMax = (4.0,   #** footCenterLocX
           0.5,   # ** zmp static percentage
-          1.0,   # **left zmp off
+          2.0,   # **left zmp off
           0.4,   # right zmp off
           0.3,  # strafe zmp offset
           6.6)   # turn zmp offset
 
 # NOTE: only the second one of these gets optimized, since they have to be the same
 hackMin = (4.0,   # joint hack
-           3.0)   # **joint hack
+           2.0)   # **joint hack
 
 hackMax =  (4.0,  # joint hack
             8.0)   # **joint hack (L/R should be same)
@@ -87,9 +87,9 @@ sensorMax = (0.0,   # Feedback type (1.0 = spring, 0.0 = old)
              45.0)   # max angle vel (change in compensation)
 
 stiffnessMin  = (0.7,  #** hipStiffness
-                 0.3,   #** kneeStiffness
-                 0.4,   #**anklePitchStiffness
-                 0.3,   #** ankleRollStiffness
+                 0.6,   #** kneeStiffness
+                 0.5,   #**anklePitchStiffness
+                 0.6,   #** ankleRollStiffness
                  0.4,   # armStiffness
                  0.4)   # arm pitch
 
