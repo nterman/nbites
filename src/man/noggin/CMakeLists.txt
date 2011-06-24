@@ -80,8 +80,9 @@ SET( NOGGIN_SRCS Noggin
                  # MCL
                  BallEKF
                  PyLoc
-                 LocEKF
-                 MMLocEKF
+                 # LocEKF
+		 MultiMeasurementEKF
+		 MultiLocEKF
                  NogginStructs.h
                  )
 
@@ -137,7 +138,7 @@ INSTALL(
   DIRECTORY ${NOGGIN_PYTHON_SUBDIRS}
   DESTINATION ${NOGGIN_PYTHON_TARGET_DIR}/
   CONFIGURATIONS "" Debug Release
-  FILES_MATCHING PATTERN "*.py"
+  PATTERN "*.py"
   )
 
 

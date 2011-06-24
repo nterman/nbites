@@ -145,8 +145,8 @@ void ALTranscriber::initSyncMotionWithALMemory(){
 
 }
 
-
 // for marvin!
+// TODO FIX THIS BECAUSE ITS PROBABLY TOTALLY WRONG
 static const float ACCEL_OFFSET_X = 3.5f;
 static const float ACCEL_OFFSET_Y = 0.5f;
 static const float ACCEL_OFFSET_Z = 4.0f;
@@ -160,7 +160,7 @@ const float ALTranscriber::calibrate_acc_x(const float x) {
 }
 
 const float ALTranscriber::calibrate_acc_y(const float y) {
-    return (y + ACCEL_OFFSET_Y) * ACCEL_CONVERSION_Y;
+	return (y + ACCEL_OFFSET_Y) * ACCEL_CONVERSION_Y;
 }
 
 const float ALTranscriber::calibrate_acc_z(const float z) {

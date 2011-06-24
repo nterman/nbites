@@ -3,7 +3,9 @@
 #include "BasicWorldConstants.h"
 using namespace boost::numeric;
 
-const int AngleEKF::num_dimensions = ANGLE_NUM_DIMENSIONS;
+using namespace ekf;
+
+const int AngleEKF::num_dimensions = ekf::angle_num_dimensions;
 const float AngleEKF::beta = 3.0f;
 const float AngleEKF::gamma = 2.0f;
 const float AngleEKF::variance  = 0.22f;
@@ -60,17 +62,17 @@ const float AngleEKF::scale(const float x) {
     //    20.0f;
 
 /*
-    return 6.73684f * std::pow(x,3) +
-       37.8947f * std::pow(x,2) +
-       -54.6316f * x +
-       70.0f;
+  return 6.73684f * std::pow(x,3) +
+  37.8947f * std::pow(x,2) +
+  -54.6316f * x +
+  70.0f;
 */
     //return 80 - 79 * std::exp( - .36f * std::pow( - 2.5f + x , 2));
     /*
-    if (x > 9.0f)
-        return 400.0f;
-    else
-        return 80 - 79 * std::exp( - .25f * std::pow( - 2.7f + x , 2));
+      if (x > 9.0f)
+      return 400.0f;
+      else
+      return 80 - 79 * std::exp( - .25f * std::pow( - 2.7f + x , 2));
     */
 }
 
@@ -94,10 +96,10 @@ const float AngleEKF::getVariance(float delta, float divergence) {
     return dont_trust;
 }
 
-void AngleEKF::incorporateMeasurement(AngleMeasurement z,
-									  StateMeasurementMatrix &H_k,
-									  MeasurementMatrix &R_k,
-									  MeasurementVector &V_k)
+void AngleEKF::incorporateMeasurement(const AngleMeasurement& z,
+				      StateMeasurementMatrix &H_k,
+				      MeasurementMatrix &R_k,
+				      MeasurementVector &V_k)
 {
     static MeasurementVector last_measurement(
         ublas::scalar_vector<float>(num_dimensions, 0.0f));
@@ -118,9 +120,9 @@ void AngleEKF::incorporateMeasurement(AngleMeasurement z,
     MeasurementVector deltaS = z_x - last_measurement;
 
 /*
-    R_k(0,0) = getVariance(deltaS(0), V_k(0));
-    R_k(1,1) = getVariance(deltaS(1), V_k(1));
-    R_k(2,2) = getVariance(deltaS(2), V_k(2));
+  R_k(0,0) = getVariance(deltaS(0), V_k(0));
+  R_k(1,1) = getVariance(deltaS(1), V_k(1));
+  R_k(2,2) = getVariance(deltaS(2), V_k(2));
 
 */
 

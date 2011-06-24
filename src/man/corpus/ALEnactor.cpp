@@ -27,6 +27,7 @@ using namespace AL;
 
 #include "Kinematics.h"
 using namespace Kinematics;
+using namespace std;
 
 //#define SPEEDY_ENACTOR
 
@@ -35,27 +36,27 @@ void ALEnactor::run() {
     Thread::trigger->on();
 
     long long currentTime;
-	struct timespec interval, remainder;
+    struct timespec interval, remainder;
     while (running) {
-        currentTime = micro_time();
+        currentTime = process_micro_time();
             sendCommands();
             //Once we've sent the most calculated joints
             postSensors();
 
         const long long zero = 0;
-        const long long processTime = micro_time() - currentTime;
+        const long long processTime = process_micro_time() - currentTime;
 
 #if ! defined OFFLINE || ! defined SPEEDY_ENACTOR
         if (processTime > MOTION_FRAME_LENGTH_uS){
-            cout << "Time spent in ALEnactor longer than frame length: "
-                 << processTime <<endl;
+            std::cout << "Time spent in ALEnactor longer than frame length: "
+                      << processTime << std::endl;
             //Don't sleep at all
         } else{
-			interval.tv_sec = 0;
-			interval.tv_nsec = static_cast<long int>(
+            interval.tv_sec = 0;
+            interval.tv_nsec = static_cast<long int>(
                 static_cast<long long int>(MOTION_FRAME_LENGTH_uS)
                 - processTime);
-			nanosleep(&interval,&remainder);
+            nanosleep(&interval,&remainder);
         }
 #endif
 
@@ -97,9 +98,8 @@ void ALEnactor::sendHardness(){
     //      probably quite slow
     for(unsigned int joint = 0; joint < NUM_JOINTS; joint ++){
 
-        const float chainStiffness
-            = motionCommandStiffness[joint];
-        const string name = JOINT_STRINGS[joint];
+        const float chainStiffness = motionCommandStiffness[joint];
+        const std::string name = JOINT_STRINGS[joint];
 #ifndef NO_ACTUAL_MOTION
         //almotion->setStiffness(name ,chainStiffness);
 #endif

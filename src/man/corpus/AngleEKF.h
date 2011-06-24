@@ -27,8 +27,10 @@
 #include "EKF.h"
 #include "EKFStructs.h"
 
-class AngleEKF : public EKF<AngleMeasurement, int, ANGLE_NUM_DIMENSIONS,
-                          ANGLE_NUM_DIMENSIONS>
+using namespace ekf;
+
+class AngleEKF : public EKF<AngleMeasurement, int, angle_num_dimensions,
+			    angle_num_dimensions>
 {
 public:
     AngleEKF();
@@ -44,11 +46,10 @@ public:
     const float getAngleXUnc() const { return P_k(0,0); }
     const float getAngleYUnc() const { return P_k(1,1); }
 
-
 private:
     // Core functions
     virtual StateVector associateTimeUpdate(int u_k);
-    virtual void incorporateMeasurement(AngleMeasurement z,
+    virtual void incorporateMeasurement(const AngleMeasurement& z,
                                         StateMeasurementMatrix &H_k,
                                         MeasurementMatrix &R_k,
                                         MeasurementVector &V_k);

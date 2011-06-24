@@ -60,10 +60,10 @@ if (CCACHE)
 endif()
 
 # where should we look for libraries we need
-SET(CMAKE_FIND_ROOT_PATH  ${OE_SYSROOT} )
+SET(CMAKE_FIND_ROOT_PATH  ${OE_SYSROOT} $ENV{NBITES_DIR}/ext/)
 
 # search for programs in the build host directories
-SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM BOTH)
 # for libraries and headers in the target directories
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)

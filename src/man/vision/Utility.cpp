@@ -20,7 +20,8 @@ bool CLOSE_ENOUGH(float arg1, float arg2, float errorAllowed) {
  */
 const int Utility::area2(const point<int> &a, const point <int> &b,
                          const point <int> &c) {
-    // Since our Y axis is backwards, we have to swap what we subtract for y
+    // Since our Y axis is backwards, we have to swap what we subtract
+    // for y values
     return (b.x - a.x) * (a.y - c.y) -//(c.y - a.y) -
         (c.x - a.x) * (a.y - b.y); //(b.y - a.y);
 }
@@ -878,7 +879,7 @@ point<int> Utility::getClosestLinePoint(const VisualLine& line,
     vector<linePoint>::const_iterator i;
 
     // No point is this far away...@TODO make it nicer
-    float minDist = 99999999;
+    float minDist = 99999999.0f;
     point<int> closest;
     for (i = points.begin(); i != points.end(); ++i){
         const float length = getLength(i->x, i->y, pt.x, pt.y);

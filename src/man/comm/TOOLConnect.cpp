@@ -10,7 +10,6 @@ using namespace boost::assign;
 #include "CommDef.h"
 #include "Kinematics.h"
 #include "SensorDef.h"
-#include "MMLocEKF.h"
 
 using std::vector;
 using namespace boost;
@@ -152,7 +151,8 @@ TOOLConnect::handle_request (DataRequest &r) throw(socket_error&)
     // Robot information request
     if (r.info) {
         serial.write_byte(ROBOT_TYPE);
-        std::string name = vision->getRobotName();
+        //TODO: this is dumb, remove it
+        std::string name = "";
         serial.write_bytes((const byte*)name.c_str(), name.size());
         // TODO - get calibration file name access
         serial.write_bytes((byte*)"table.mtb", strlen("table.mtb"));
@@ -187,19 +187,33 @@ TOOLConnect::handle_request (DataRequest &r) throw(socket_error&)
             reinterpret_cast<const uint8_t*>(sensors->getColorImage()),
             COLOR_IMAGE_BYTE_SIZE);
 
-	if (r.objects) {
-		if (loc.get()) {
-			vector<Observation> obs = loc->getLastObservations();
-			vector<float> obs_values;
+    if (r.objects) {
+        if (loc.get()) {
+            vector<float> obs_values;
 
-			for (unsigned int i=0; i < obs.size() ; ++i){
-				obs_values.push_back(static_cast<float>(obs[i].getID()));
-				obs_values.push_back(obs[i].getVisDistance());
-				obs_values.push_back(obs[i].getVisBearing());
-			}
-			serial.write_floats(obs_values);
-		}
-	}
+            // Add point values to observed values
+            vector<PointObservation> obs =
+                loc->getLastPointObservations();
+            for (vector<PointObservation>::iterator i = obs.begin();
+                 i != obs.end() ; ++i){
+                obs_values.push_back(static_cast<float>(i->getID()));
+                obs_values.push_back(i->getVisDistance());
+                obs_values.push_back(i->getVisBearing());
+            }
+
+            // Add corners to observed values
+            vector<CornerObservation> corners =
+                loc->getLastCornerObservations();
+            for (vector<CornerObservation>::iterator i = corners.begin();
+                 i != corners.end() ; ++i){
+                obs_values.push_back(static_cast<float>(i->getID()));
+                obs_values.push_back(i->getVisDistance());
+                obs_values.push_back(i->getVisBearing());
+            }
+
+            serial.write_floats(obs_values);
+        }
+    }
 
     if (r.local) {
         // send localization data

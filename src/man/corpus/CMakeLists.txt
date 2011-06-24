@@ -85,6 +85,8 @@ SET( ROBOT_CONNECT_SRCS
   AccEKF
   AngleEKF
   RoboGuardian
+  guardian/ConnectionAngel
+  guardian/WifiAngel
   ClickableButton
   PyRoboGuardian
   Lights
@@ -151,6 +153,9 @@ SET( CORPUS_TEST_DIR test )
 
 SET( NBINCLUDE_SRCS ${NBCOMMON_INCLUDE_DIR}/NBMatrixMath
   ${NBCOMMON_INCLUDE_DIR}/NBMath
+  ${NBCOMMON_INCLUDE_DIR}/dsp
+  ${NBCOMMON_INCLUDE_DIR}/SensorMonitor
+  ${NBCOMMON_INCLUDE_DIR}/BulkMonitor
   CoordFrame4D
   CoordFrame3D
   )
@@ -273,9 +278,6 @@ TARGET_LINK_LIBRARIES( ${NBINCLUDE_TARGET}
 ############################ (SUB)DIRECTORY COMPILATION
 # Set the sudirectories (some may not actually be subdirectories) to
 # include in this package
-#SUBDIRS(
-#  )
-
 
 ############################ TESTS!
 
