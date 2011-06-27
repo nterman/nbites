@@ -69,6 +69,7 @@ StepGenerator::StepGenerator(shared_ptr<Sensors> s,
     controller_y(new Observer()),
     zmp_filter(),
     acc_filter(),
+    accDelayQueue(std::queue<ufvector4>()),
     accInWorldFrame(CoordFrame4D::vector4D(0.0f,0.0f,0.0f))
 {
     //COM logging
@@ -190,6 +191,7 @@ void StepGenerator::findSensorZMP(){
 				      -inertial.angleX));
 
     // update the IIR filter
+    /*
     acc_filter.update(inertial.accX,
                       inertial.accY,
                       inertial.accZ);
@@ -197,9 +199,24 @@ void StepGenerator::findSensorZMP(){
     const ufvector4 accInBodyFrame = CoordFrame4D::vector4D(acc_filter.getX(),
                                                             acc_filter.getY(),
                                                             acc_filter.getZ());
-    // and rotate the filtered acceleration
+    */
+
+    const ufvector4 accInBodyFrame = CoordFrame4D::vector4D(inertial.accX,
+							    inertial.accY,
+							    inertial.accZ);
+    // and rotate the acceleration to the world frame
     accInWorldFrame = prod(bodyToWorldTransform,
                            accInBodyFrame);
+
+    // use a small sensor delay here, works better than filtering the data again
+    static const unsigned int SENSOR_DELAY_FRAMES = 5;
+
+    accDelayQueue.push(accInWorldFrame);
+
+    if (accDelayQueue.size() > SENSOR_DELAY_FRAMES) {
+	accInWorldFrame = accDelayQueue.front();
+	accDelayQueue.pop();
+    }
 
     //cout << endl<< "########################"<<endl;
     //cout << "Accel in body  frame: "<< accInBodyFrame <<endl;
@@ -225,8 +242,8 @@ void StepGenerator::findSensorZMP(){
 
     ZmpTimeUpdate tUp = {controller_x->getZMP(), controller_y->getZMP()};
     ZmpMeasurement pMeasure =
-    //{joint_com_i_x, (joint_com_i_y + COM_I_Y_OFFSET),
-	{controller_x->getPosition(), controller_y->getPosition(),
+	{joint_com_i_x, joint_com_i_y,
+	 //{controller_x->getPosition(), controller_y->getPosition(),
 	 pose->getBodyCenterHeight(),
 	 accel_i(0), accel_i(1)};
     zmp_filter.update(tUp,pMeasure);

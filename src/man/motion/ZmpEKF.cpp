@@ -82,13 +82,13 @@ void ZmpEKF::incorporateMeasurement(const ZmpMeasurement& z,
                                     MeasurementMatrix &R_k,
                                     MeasurementVector &V_k)
 {
-	const float zheight_div_G = z.comZ/GRAVITY_mss;
+    const float zheight_div_G = z.comZ/GRAVITY_mss;
     static MeasurementVector last_measurement(
         ublas::scalar_vector<float>(zmp_num_measurements, 0.0f));
 
     MeasurementVector z_x(zmp_num_measurements);
-    z_x(0) = z.comX + zheight_div_G * z.accX;
-    z_x(1) = z.comY + zheight_div_G * z.accY;
+    z_x(0) = z.comX - zheight_div_G * z.accX;
+    z_x(1) = z.comY - zheight_div_G * z.accY;
 
     // The Jacobian is the identity because the observation space is the same
     // as the state space.

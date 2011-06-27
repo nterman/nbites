@@ -107,9 +107,14 @@ void NaoPose::transform() {
                                      CameraCalibrate::Transforms[i]);
     }
 
+
     ublas::matrix<float> supportLegToBodyTransform;
 
-    //support leg is determined by the motion engine
+    //support leg is determined by which leg is further from the body!
+    //this should be changed in one or more of the following ways:
+    //   * ask the walk engine for the support leg. (doesnt work in cortex)
+    //   * ask the gyros/accelerometers for which way is down (doesnt work yet)
+    //if (lLegDistance > rLegDistance) {
     if (sensors->getSupportFoot() == LEFT_SUPPORT) {
         supportLegToBodyTransform = calculateForwardTransform(LLEG_CHAIN,
                                                               lLegAngles);
@@ -127,44 +132,35 @@ void NaoPose::transform() {
     supportLegToBodyTransform(Y_AXIS, W_AXIS) = 0.0f;
     supportLegToBodyTransform(Z_AXIS, W_AXIS) = 0.0f;
 
-	//cout << "world to body:" << endl;
-	//cout << supportLegToBodyTransform << endl;
+    // **************************
+    // The code below is old but is kept around just in case the new code does
+    // not work. We used to get the body rotation using the leg transform, but
+    // now we use the accelerometers. The question is whether we should first
+    // apply the x rotation or the y one.
+    // **************************
+    // We need the inverse but we calculate the transpose because they are
+    // equivalent for orthogonal matrices and transpose is faster.
+     ublas::matrix<float>bodyToWorldTransform=trans(supportLegToBodyTransform);
+    // **************************
+    // End old code
+    // **************************
 
-	// Calculate bodyToWorld via pose.  We need the inverse but we
-    // calculate the transpose because they are equivalent for
-    // orthogonal matrices and transpose is faster.
-    ublas::matrix<float>bodyToWorldTransform_pose = trans(supportLegToBodyTransform);
 
-	/* Now that we've calculated body to world, we can put this information
-	 * into the torso angle EKF. Other components (eg motion) that use angleX/Y
-	 * will (hopefully) have a more accurate measure.
-	 * NOTE: this code runs at Vision's frame rate, so the EKF will get joint
-	 * data half as often as gyro sensors. Still appears to help.
-	 */
-	ublas::vector<float> torsoAngles = eulerAngles(bodyToWorldTransform_pose);
+    // At this time we trust inertial
+    const Inertial inertial = sensors->getInertial();
+    bodyInclinationX = inertial.angleX;
+    bodyInclinationY = inertial.angleY;
 
-	//cout << "euler angles:"<<  torsoAngles << endl;
+    //cout<<"inertial.x "<<bodyInclinationX<<" y: "<<bodyInclinationY<<endl;
 
-	// update the EKF in Sensors
-	sensors->setTorsoAnglesFromPose(torsoAngles[X_AXIS], torsoAngles[Y_AXIS]);
+ //   ublas::matrix<float> bodyToWorldTransform =
+  //          prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
+ //                                         bodyInclinationY),
+   //              CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
+   //                                           bodyInclinationX));
 
-	const Inertial inertial = sensors->getInertial();
-
-	// these values are now a filtered combination of gyro/pose data
-	bodyInclinationX = inertial.angleX;
-	bodyInclinationY = inertial.angleY;
-
-	//cout << "  inertial.x: " << bodyInclinationX << " y: " << bodyInclinationY <<endl;
-
-	ublas::matrix<float> bodyToWorldTransform =
-		prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
-									  -bodyInclinationY),
-			 CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
-									  -bodyInclinationX));
-
-	ublas::vector<float> torsoLocationInLegFrame = prod(bodyToWorldTransform,
+    ublas::vector<float> torsoLocationInLegFrame = prod(bodyToWorldTransform,
                                                         supportLegLocation);
-
     // get the Z component of the location
     comHeight = -torsoLocationInLegFrame[Z];
 
@@ -432,6 +428,7 @@ const estimate NaoPose::pixEstimate(const int pixelX, const int pixelY,
     }
 
     //estimate est = getEstimate(objectInWorldFrame);
+    //est.dist = correctDistance(static_cast<float> (est.dist));
 
     return est;
 }
@@ -466,6 +463,16 @@ const estimate NaoPose::bodyEstimate(const int x, const int y, const float dist)
 
     return getEstimate(objectInWorldFrame);
 }
+
+/* OBSOLETE (yay)
+const float NaoPose::correctDistance(const float uncorrectedDist) {
+    if (uncorrectedDist > 706.0f) {
+        return uncorrectedDist - 387.0f;
+    }
+    return -0.000591972f * uncorrectedDist * uncorrectedDist + 0.858283f
+            * uncorrectedDist + 2.18768F;
+}
+*/
 
 /**
  * Method to populate an estimate with an vector4D in homogenous coordinates.
@@ -511,52 +518,6 @@ estimate NaoPose::getEstimate(ublas::vector<float> objInWorldFrame) {
         pix_est.elevation = NBMath::safe_asin(temp2);
 
     return pix_est;
-}
-
-// returns the equivalent angular rotations of a rotation matrix
-// this method may break for matrices that include translations
-ublas::vector<float> NaoPose::eulerAngles(ublas::matrix<float> rotation) {
-	ublas::vector<float> angles = vector4D(0.0f, 0.0f, 0.0f);
-
-	float rot_x, rot_y, rot_z;
-
-	// this second set of angles is mathematically correct, but not useful
-	//float rot_x2, rot_y2, rot_z2;
-
-	// degenerate case
-	if (rotation(2, 0) == 0 || rotation(2, 0) == 1) {
-		rot_z = 0; // can be anything
-		if (rotation(2, 0) == -1) {
-			rot_y = QUART_CIRC_RAD;
-			rot_x = rot_z + NBMath::safe_atan2(rotation(0, 1), rotation(0, 2));
-		} else {
-			rot_y = -QUART_CIRC_RAD;
-			rot_x = rot_z + NBMath::safe_atan2(-rotation(0, 1), -rotation(0, 2));
-		}
-	} else { // normal case
-		rot_y = -NBMath::safe_asin(rotation(2, 0));
-		//rot_y2 = M_PI_FLOAT - rot_y;
-
-		const float cos_rot_y = std::cos(rot_y);
-		//const float cos_rot_y2 = std::cos(rot_y2);
-
-		rot_x = NBMath::safe_atan2(rotation(2, 1)/cos_rot_y, rotation(2, 2)/cos_rot_y);
-		//rot_x2 = NBMath::safe_atan2(rotation(2, 1)/cos_rot_y2, rotation(2, 2)/cos_rot_y2);
-
-		rot_z = NBMath::safe_atan2(rotation(1, 0)/cos_rot_y, rotation(0, 0)/cos_rot_y);
-		//rot_z2 = NBMath::safe_atan2(rotation(1, 0)/cos_rot_y2, rotation(0, 0)/cos_rot_y2);
-
-		//printf("x: %f y: %f z: %f\n", rot_x, rot_y, rot_z);
-
-		//printf("x: %f y: %f z: %f, x2: %f y2: %f z2: %f\n", rot_x, rot_y, rot_z,
-		//rot_x2, rot_y2, rot_z2);
-	}
-
-	angles[X_AXIS] = rot_x;
-	angles[Y_AXIS] = rot_y;
-	angles[Z_AXIS] = rot_z;
-
-	return angles;
 }
 
 //TODO: test this (untested as of now)
