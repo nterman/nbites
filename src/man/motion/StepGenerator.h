@@ -78,7 +78,6 @@
 #include <cstdio>
 #include <math.h>
 #include <list>
-#include <queue>
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/shared_ptr.hpp>
@@ -240,7 +239,6 @@ private:
     ZmpEKF zmp_filter;
 
     ZmpAccExp acc_filter;
-    std::queue<ufvector4> accDelayQueue;
 
     NBMath::ufvector4 accInWorldFrame;
 

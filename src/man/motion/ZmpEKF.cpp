@@ -87,8 +87,9 @@ void ZmpEKF::incorporateMeasurement(const ZmpMeasurement& z,
         ublas::scalar_vector<float>(zmp_num_measurements, 0.0f));
 
     MeasurementVector z_x(zmp_num_measurements);
-    z_x(0) = z.comX - zheight_div_G * z.accX;
-    z_x(1) = z.comY - zheight_div_G * z.accY;
+    // addition here b/c G is negative in our constants
+    z_x(0) = z.comX + zheight_div_G * z.accX;
+    z_x(1) = z.comY + zheight_div_G * z.accY;
 
     // The Jacobian is the identity because the observation space is the same
     // as the state space.
