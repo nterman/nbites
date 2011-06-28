@@ -71,10 +71,7 @@ void NaoEnactor::sendCommands(){
 
 void NaoEnactor::sendJoints()
 {
-    // Send the array with a 25 ms delay. This delay removes the jitter.
-    // Note: I tried 20 ms and it didn't work quite as well. Maybe there is
-    // a value in between that works though. Will look into it.
-    joint_command[4][0] = dcmProxy->getTime(20);
+    joint_command[4][0] = dcmProxy->getTime(0);
 
     // Get the angles we want to go to this frame from the switchboard
     motionValues = switchboard->getNextJoints();
