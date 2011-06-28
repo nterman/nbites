@@ -33,7 +33,7 @@ const float NaoPose::IMAGE_HEIGHT_MM = 1.76f;
 
 // Calculated from numbers in camera docs:
 const float NaoPose::FOCAL_LENGTH_MM = (float) ((IMAGE_WIDTH_MM / 2)
-        / tan(FOV_X / 2));
+						/ tan(FOV_X / 2));
 
 // e.g. 3 mm * mm_to_pix = 176 pixels
 const float NaoPose::MM_TO_PIX_X = IMAGE_WIDTH / IMAGE_WIDTH_MM;
@@ -44,9 +44,9 @@ const float NaoPose::IMAGE_CENTER_X = (IMAGE_WIDTH - 1) / 2.0f;
 const float NaoPose::IMAGE_CENTER_Y = (IMAGE_HEIGHT - 1) / 2.0f;
 
 const float NaoPose::PIX_TO_RAD_X =
-        static_cast<float> (FOV_X_DEG / IMAGE_WIDTH) * TO_RAD;
+    static_cast<float> (FOV_X_DEG / IMAGE_WIDTH) * TO_RAD;
 const float NaoPose::PIX_TO_RAD_Y = static_cast<float> (FOV_Y_DEG
-        / IMAGE_HEIGHT) * TO_RAD;
+							/ IMAGE_HEIGHT) * TO_RAD;
 
 const estimate NaoPose::NULL_ESTIMATE;
 
@@ -64,13 +64,13 @@ const ublas::vector<float> NaoPose::topRight = vector4D(FOCAL_LENGTH_MM,
                                                         -IMAGE_WIDTH_MM / 2,
                                                         IMAGE_HEIGHT_MM / 2);
 const ublas::vector<float> NaoPose::bottomRight =
-        vector4D(FOCAL_LENGTH_MM, -IMAGE_WIDTH_MM / 2, -IMAGE_HEIGHT_MM / 2);
+    vector4D(FOCAL_LENGTH_MM, -IMAGE_WIDTH_MM / 2, -IMAGE_HEIGHT_MM / 2);
 
 NaoPose::NaoPose(shared_ptr<Sensors> s) :
     bodyInclinationX(0.0f), bodyInclinationY(0.0f), sensors(s), horizonLeft(0,
                                                                             0),
-            horizonRight(0, 0), horizonSlope(0.0f), perpenHorizonSlope(0.0f),
-            focalPointInWorldFrame(0.0f, 0.0f, 0.0f), comHeight(0.0f) {
+    horizonRight(0, 0), horizonSlope(0.0f), perpenHorizonSlope(0.0f),
+    focalPointInWorldFrame(0.0f, 0.0f, 0.0f), comHeight(0.0f) {
 }
 
 /**
@@ -93,7 +93,7 @@ void NaoPose::transform() {
     copy(bodyAngles.begin(), bodyAngles.begin() + HEAD_JOINTS,
          headAngles.begin());
     copy(bodyAngles.begin() + HEAD_JOINTS + ARM_JOINTS, bodyAngles.begin()
-            + HEAD_JOINTS + ARM_JOINTS + LEG_JOINTS, lLegAngles.begin());
+	 + HEAD_JOINTS + ARM_JOINTS + LEG_JOINTS, lLegAngles.begin());
     copy(bodyAngles.begin() + HEAD_JOINTS + ARM_JOINTS + LEG_JOINTS,
          bodyAngles.begin() + HEAD_JOINTS + ARM_JOINTS + 2 * LEG_JOINTS,
          rLegAngles.begin());
@@ -107,14 +107,9 @@ void NaoPose::transform() {
                                      CameraCalibrate::Transforms[i]);
     }
 
-
     ublas::matrix<float> supportLegToBodyTransform;
 
-    //support leg is determined by which leg is further from the body!
-    //this should be changed in one or more of the following ways:
-    //   * ask the walk engine for the support leg. (doesnt work in cortex)
-    //   * ask the gyros/accelerometers for which way is down (doesnt work yet)
-    //if (lLegDistance > rLegDistance) {
+    //support leg is determined by the motion engine
     if (sensors->getSupportFoot() == LEFT_SUPPORT) {
         supportLegToBodyTransform = calculateForwardTransform(LLEG_CHAIN,
                                                               lLegAngles);
@@ -124,7 +119,7 @@ void NaoPose::transform() {
     }
 
     const ublas::vector<float>
-            supportLegLocation(prod(supportLegToBodyTransform, origin));
+	supportLegLocation(prod(supportLegToBodyTransform, origin));
 
     // Now support leg to body is actually world to body. World is explained in
     // the header.
@@ -132,35 +127,25 @@ void NaoPose::transform() {
     supportLegToBodyTransform(Y_AXIS, W_AXIS) = 0.0f;
     supportLegToBodyTransform(Z_AXIS, W_AXIS) = 0.0f;
 
-    // **************************
-    // The code below is old but is kept around just in case the new code does
-    // not work. We used to get the body rotation using the leg transform, but
-    // now we use the accelerometers. The question is whether we should first
-    // apply the x rotation or the y one.
-    // **************************
-    // We need the inverse but we calculate the transpose because they are
-    // equivalent for orthogonal matrices and transpose is faster.
-     ublas::matrix<float>bodyToWorldTransform=trans(supportLegToBodyTransform);
-    // **************************
-    // End old code
-    // **************************
+    //cout << "world to body:" << endl;
+    //cout << supportLegToBodyTransform << endl;
 
-
-    // At this time we trust inertial
     const Inertial inertial = sensors->getInertial();
+
     bodyInclinationX = inertial.angleX;
     bodyInclinationY = inertial.angleY;
 
-    //cout<<"inertial.x "<<bodyInclinationX<<" y: "<<bodyInclinationY<<endl;
+    //cout << "  inertial.x: " << bodyInclinationX << " y: " << bodyInclinationY <<endl;
 
- //   ublas::matrix<float> bodyToWorldTransform =
-  //          prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
- //                                         bodyInclinationY),
-   //              CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
-   //                                           bodyInclinationX));
+    ublas::matrix<float> bodyToWorldTransform =
+	prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
+				      -bodyInclinationY),
+	     CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
+				      -bodyInclinationX));
 
     ublas::vector<float> torsoLocationInLegFrame = prod(bodyToWorldTransform,
                                                         supportLegLocation);
+
     // get the Z component of the location
     comHeight = -torsoLocationInLegFrame[Z];
 
@@ -207,7 +192,7 @@ void NaoPose::calcImageHorizonLine() {
     //intersection points in the horizon frame
     ublas::vector<float> intersectionLeft = intersectLineWithXYPlane(leftEdge);
     ublas::vector<float> intersectionRight =
-            intersectLineWithXYPlane(rightEdge);
+	intersectLineWithXYPlane(rightEdge);
 
     // Now they are in the camera frame. Result still stored in intersection 1,2
     intersectionLeft = prod(horizonToCameraFrame, intersectionLeft);
@@ -219,9 +204,9 @@ void NaoPose::calcImageHorizonLine() {
     const float height_mm_right = intersectionRight(Z);
 
     const float height_pix_left = -height_mm_left * MM_TO_PIX_Y + IMAGE_HEIGHT
-            / 2;
+	/ 2;
     const float height_pix_right = -height_mm_right * MM_TO_PIX_Y
-            + IMAGE_HEIGHT / 2;
+	+ IMAGE_HEIGHT / 2;
 
     horizonLeft.x = 0;
     horizonLeft.y = ROUND(height_pix_left);
@@ -229,7 +214,7 @@ void NaoPose::calcImageHorizonLine() {
     horizonRight.y = ROUND(height_pix_right);
 
     horizonSlope = (float) ((height_pix_right - height_pix_left) / (IMAGE_WIDTH
-            - 1.0));
+								    - 1.0));
     if (horizonSlope != 0)
         perpenHorizonSlope = -1 / horizonSlope;
     else
@@ -242,7 +227,7 @@ void NaoPose::calcImageHorizonLine() {
  * if dependency on matrix multiplication was removed.
  */
 ublas::vector<float> NaoPose::intersectLineWithXYPlane(const std::vector<
-        ublas::vector<float> > &aLine) {
+						       ublas::vector<float> > &aLine) {
     ublas::vector<float> l1 = aLine[0];
     ublas::vector<float> l2 = aLine[1];
 
@@ -316,16 +301,16 @@ const estimate NaoPose::pixEstimate(const int pixelX, const int pixelY,
                                     const float objectHeight) {
 
     /*if (pixelX >= IMAGE_WIDTH || pixelX < 0 || pixelY >= IMAGE_HEIGHT || pixelY
-            < 0) {
-        return NULL_ESTIMATE;
-    }
+      < 0) {
+      return NULL_ESTIMATE;
+      }
     */
     /*
     // declare x,y,z coordinate of pixel in relation to focal point
     ublas::vector<float> pixelInCameraFrame =
-            vector4D(FOCAL_LENGTH_MM, ((float) IMAGE_CENTER_X - (float) pixelX)
-                    * (float) PIX_X_TO_MM, ((float) IMAGE_CENTER_Y
-                    - (float) pixelY) * (float) PIX_Y_TO_MM);
+    vector4D(FOCAL_LENGTH_MM, ((float) IMAGE_CENTER_X - (float) pixelX)
+    * (float) PIX_X_TO_MM, ((float) IMAGE_CENTER_Y
+    - (float) pixelY) * (float) PIX_Y_TO_MM);
 
     // declare x,y,z coordinate of pixel in relation to body center
     ublas::vector<float> pixelInWorldFrame(4);
@@ -348,23 +333,23 @@ const estimate NaoPose::pixEstimate(const int pixelX, const int pixelY,
 
     // calculate t knowing object_z_in_body_frame
     if ((focalPointInWorldFrame.z - pixelInWorldFrame(Z)) != 0) {
-        t = (object_z_in_world_frame - pixelInWorldFrame(Z))
-                / (focalPointInWorldFrame.z - pixelInWorldFrame(Z));
+    t = (object_z_in_world_frame - pixelInWorldFrame(Z))
+    / (focalPointInWorldFrame.z - pixelInWorldFrame(Z));
     }
 
     const float x = pixelInWorldFrame(X) + (focalPointInWorldFrame.x
-            - pixelInWorldFrame(X)) * t;
+    - pixelInWorldFrame(X)) * t;
     const float y = pixelInWorldFrame(Y) + (focalPointInWorldFrame.y
-            - pixelInWorldFrame(Y)) * t;
+    - pixelInWorldFrame(Y)) * t;
     const float z = pixelInWorldFrame(Z) + (focalPointInWorldFrame.z
-            - pixelInWorldFrame(Z)) * t;
+    - pixelInWorldFrame(Z)) * t;
     ublas::vector<float> objectInWorldFrame = vector4D(x, y, z);
-*/
+    */
     float FOCAL_LENGTH = 385.54f;
     ufvector4 pixelInCameraFrame =
-            vector4D( FOCAL_LENGTH,
-                      ((float)IMAGE_CENTER_X - (float)pixelX),
-                      ((float)IMAGE_CENTER_Y - (float)pixelY));
+	vector4D( FOCAL_LENGTH,
+		  ((float)IMAGE_CENTER_X - (float)pixelX),
+		  ((float)IMAGE_CENTER_Y - (float)pixelY));
 
     ufmatrix4 cameraToWorldRotation = cameraToWorldFrame;
     cameraToWorldRotation(0, 3) = 0;
@@ -376,7 +361,7 @@ const estimate NaoPose::pixEstimate(const int pixelX, const int pixelY,
     float beta = atan(pixelInWorldFrame(Y)/pixelInWorldFrame(X));
 
     float alpha = sqrt((pixelInWorldFrame(X)*pixelInWorldFrame(X)) + (pixelInWorldFrame(Y)*pixelInWorldFrame(Y))
-                      + (pixelInWorldFrame(Z)*pixelInWorldFrame(Z))) / pixelInWorldFrame(Z);
+		       + (pixelInWorldFrame(Z)*pixelInWorldFrame(Z))) / pixelInWorldFrame(Z);
 
     float distance3D = alpha * (focalPointInWorldFrame.z + comHeight - objectHeight);
     float distance2D = sqrt(distance3D * distance3D - (focalPointInWorldFrame.z + comHeight - objectHeight) *
@@ -423,12 +408,11 @@ const estimate NaoPose::pixEstimate(const int pixelX, const int pixelY,
     //the focal point, or else, we will get odd results, since the point
     //of intersection with that plane will be behind us.
     if (objectHeight * CM_TO_MM < comHeight + focalPointInWorldFrame.z
-            && pixelInWorldFrame(Z) > focalPointInWorldFrame.z) {
+	&& pixelInWorldFrame(Z) > focalPointInWorldFrame.z) {
         return NULL_ESTIMATE;
     }
 
     //estimate est = getEstimate(objectInWorldFrame);
-    //est.dist = correctDistance(static_cast<float> (est.dist));
 
     return est;
 }
@@ -453,9 +437,9 @@ const estimate NaoPose::bodyEstimate(const int x, const int y, const float dist)
 
     // object in the camera frame
     ublas::vector<float> objectInCameraFrame = vector4D(object_dist
-            * cos(object_bearing) * cos(-object_elevation), object_dist
-            * sin(object_bearing), object_dist * cos(object_bearing)
-            * sin(-object_elevation));
+							* cos(object_bearing) * cos(-object_elevation), object_dist
+							* sin(object_bearing), object_dist * cos(object_bearing)
+							* sin(-object_elevation));
 
     // object in world frame
     ublas::vector<float> objectInWorldFrame = prod(cameraToWorldFrame,
@@ -463,16 +447,6 @@ const estimate NaoPose::bodyEstimate(const int x, const int y, const float dist)
 
     return getEstimate(objectInWorldFrame);
 }
-
-/* OBSOLETE (yay)
-const float NaoPose::correctDistance(const float uncorrectedDist) {
-    if (uncorrectedDist > 706.0f) {
-        return uncorrectedDist - 387.0f;
-    }
-    return -0.000591972f * uncorrectedDist * uncorrectedDist + 0.858283f
-            * uncorrectedDist + 2.18768F;
-}
-*/
 
 /**
  * Method to populate an estimate with an vector4D in homogenous coordinates.
@@ -486,7 +460,7 @@ estimate NaoPose::getEstimate(ublas::vector<float> objInWorldFrame) {
     //distance as projected onto XY plane - ie bird's eye view
 
     pix_est.dist = getHypotenuse(objInWorldFrame(X), objInWorldFrame(Y))
-            * MM_TO_CM;
+	* MM_TO_CM;
 
     // calculate in radians the bearing to the object from the center of the body
     // since trig functions can't handle 2 Pi, we need to differentiate
@@ -520,6 +494,52 @@ estimate NaoPose::getEstimate(ublas::vector<float> objInWorldFrame) {
     return pix_est;
 }
 
+// returns the equivalent angular rotations of a rotation matrix
+// this method may break for matrices that include translations
+ublas::vector<float> NaoPose::eulerAngles(ublas::matrix<float> rotation) {
+    ublas::vector<float> angles = vector4D(0.0f, 0.0f, 0.0f);
+
+    float rot_x, rot_y, rot_z;
+
+    // this second set of angles is mathematically correct, but not useful
+    //float rot_x2, rot_y2, rot_z2;
+
+    // degenerate case
+    if (rotation(2, 0) == 0 || rotation(2, 0) == 1) {
+	rot_z = 0; // can be anything
+	if (rotation(2, 0) == -1) {
+	    rot_y = QUART_CIRC_RAD;
+	    rot_x = rot_z + NBMath::safe_atan2(rotation(0, 1), rotation(0, 2));
+	} else {
+	    rot_y = -QUART_CIRC_RAD;
+	    rot_x = rot_z + NBMath::safe_atan2(-rotation(0, 1), -rotation(0, 2));
+	}
+    } else { // normal case
+	rot_y = -NBMath::safe_asin(rotation(2, 0));
+	//rot_y2 = M_PI_FLOAT - rot_y;
+
+	const float cos_rot_y = std::cos(rot_y);
+	//const float cos_rot_y2 = std::cos(rot_y2);
+
+	rot_x = NBMath::safe_atan2(rotation(2, 1)/cos_rot_y, rotation(2, 2)/cos_rot_y);
+	//rot_x2 = NBMath::safe_atan2(rotation(2, 1)/cos_rot_y2, rotation(2, 2)/cos_rot_y2);
+
+	rot_z = NBMath::safe_atan2(rotation(1, 0)/cos_rot_y, rotation(0, 0)/cos_rot_y);
+	//rot_z2 = NBMath::safe_atan2(rotation(1, 0)/cos_rot_y2, rotation(0, 0)/cos_rot_y2);
+
+	//printf("x: %f y: %f z: %f\n", rot_x, rot_y, rot_z);
+
+	//printf("x: %f y: %f z: %f, x2: %f y2: %f z2: %f\n", rot_x, rot_y, rot_z,
+	//rot_x2, rot_y2, rot_z2);
+    }
+
+    angles[X_AXIS] = rot_x;
+    angles[Y_AXIS] = rot_y;
+    angles[Z_AXIS] = rot_z;
+
+    return angles;
+}
+
 //TODO: test this (untested as of now)
 const float NaoPose::getDistanceBetweenTwoObjects(estimate e1, estimate e2) {
 
@@ -530,7 +550,7 @@ const float NaoPose::getDistanceBetweenTwoObjects(estimate e1, estimate e2) {
 
 const ublas::matrix<float> NaoPose::calculateForwardTransform(const ChainID id,
                                                               const std::vector<
-                                                                      float> &angles) {
+							      float> &angles) {
     ublas::matrix<float> fullTransform = ublas::identity_matrix<float>(4);
 
     // Do base transforms
@@ -551,34 +571,34 @@ const ublas::matrix<float> NaoPose::calculateForwardTransform(const ChainID id,
         //length L - movement along the X(i-1) axis
         if (currentmDHParameters[i * 4 + L] != 0) {
             const ublas::matrix<float>
-                    transX = CoordFrame4D::translation4D(currentmDHParameters[i
-                            * 4 + L], 0.0f, 0.0f);
+		transX = CoordFrame4D::translation4D(currentmDHParameters[i
+									  * 4 + L], 0.0f, 0.0f);
             fullTransform = prod(fullTransform, transX);
         }
 
         //twist: - rotate about the X(i-1) axis
         if (currentmDHParameters[i * 4 + ALPHA] != 0) {
             const ublas::matrix<float>
-                    rotX = CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
-                                                    currentmDHParameters[i * 4
-                                                            + ALPHA]);
+		rotX = CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
+						currentmDHParameters[i * 4
+								     + ALPHA]);
             fullTransform = prod(fullTransform, rotX);
         }
         //theta - rotate about the Z(i) axis
         if (currentmDHParameters[i * 4 + THETA] + angles[i] != 0) {
             const ublas::matrix<float>
-                    rotZ = CoordFrame4D::rotation4D(CoordFrame4D::Z_AXIS,
-                                                    currentmDHParameters[i * 4
-                                                            + THETA]
-                                                            + angles[i]);
+		rotZ = CoordFrame4D::rotation4D(CoordFrame4D::Z_AXIS,
+						currentmDHParameters[i * 4
+								     + THETA]
+						+ angles[i]);
             fullTransform = prod(fullTransform, rotZ);
         }
         //offset D movement along the Z(i) axis
         if (currentmDHParameters[i * 4 + D] != 0) {
             const ublas::matrix<float>
-                    transZ = CoordFrame4D::translation4D(0.0f, 0.0f,
-                                                         currentmDHParameters[i
-                                                                 * 4 + D]);
+		transZ = CoordFrame4D::translation4D(0.0f, 0.0f,
+						     currentmDHParameters[i
+									  * 4 + D]);
             fullTransform = prod(fullTransform, transZ);
         }
     }
@@ -595,7 +615,7 @@ const ublas::matrix<float> NaoPose::calculateForwardTransform(const ChainID id,
 const float NaoPose::getHomLength(const ublas::vector<float> &vec) {
     float sum = 0.0f;
     for (ublas::vector<float>::const_iterator i = vec.begin(); i != vec.end()
-            - 1; ++i) {
+	     - 1; ++i) {
         sum += *i * *i;
     }
     return sqrt(sum);
@@ -630,21 +650,21 @@ const float NaoPose::pixWidthToDistance(float pixWidth, float cmWidth) const {
  * x, y, robotAngle are considered from a bird's eye view perspective
  **/
 std::vector<VisualLine> NaoPose::getExpectedVisualLinesFromFieldPosition(
-        float x, float y, float robotAngle) {
+    float x, float y, float robotAngle) {
 
     std::vector<VisualLine> visualLines;
     //translation from the world origin to the robot origin
     ublas::matrix <float> worldOriginToRobotOriginTranslation =
-            CoordFrame3D::translation3D(-x, -y);
+	CoordFrame3D::translation3D(-x, -y);
     //rotation around the angle the robot is oriented relative to the world origin
     ublas::matrix <float> worldToRobotRotation =
-            CoordFrame3D::rotation3D(CoordFrame3D::Z_AXIS, robotAngle);
+	CoordFrame3D::rotation3D(CoordFrame3D::Z_AXIS, robotAngle);
 
     for (vector <const ConcreteLine*>::const_iterator i = ConcreteLine::concreteLines().begin();
-            i != ConcreteLine::concreteLines().end(); i++) {
+	 i != ConcreteLine::concreteLines().end(); i++) {
 
         ublas::vector <float> linePoint1 = CoordFrame3D::vector3D(
-                (**i).getFieldX1(), (**i).getFieldY1());
+	    (**i).getFieldX1(), (**i).getFieldY1());
         //get the line point in the robot coordinate system
         linePoint1 = prod(worldOriginToRobotOriginTranslation, linePoint1);
         linePoint1 = prod(worldToRobotRotation, linePoint1);
@@ -655,7 +675,7 @@ std::vector<VisualLine> NaoPose::getExpectedVisualLinesFromFieldPosition(
         visualLinePoint1.y = (int) pixel1(Y);
 
         ublas::vector <float> linePoint2 = CoordFrame3D::vector3D(
-                (**i).getFieldX2(), (**i).getFieldY2());
+	    (**i).getFieldX2(), (**i).getFieldY2());
         //get the line point in the robot coordinate system
         linePoint2 = prod(worldOriginToRobotOriginTranslation, linePoint2);
         linePoint2 = prod(worldToRobotRotation, linePoint2);
@@ -689,7 +709,7 @@ const ublas::vector <float> NaoPose::worldPointToPixel(ublas::vector <float> poi
 {
 
     ublas::vector <float> pointVectorInWorldFrame =
-            CoordFrame4D::vector4D(point(X) * CM_TO_MM, point(Y) * CM_TO_MM, -comHeight);
+	CoordFrame4D::vector4D(point(X) * CM_TO_MM, point(Y) * CM_TO_MM, -comHeight);
     //transform it from the world frame to the camera frame
     pointVectorInWorldFrame(X) = pointVectorInWorldFrame(X) - focalPointInWorldFrame.x;
     pointVectorInWorldFrame(Y) = pointVectorInWorldFrame(Y) - focalPointInWorldFrame.y;
@@ -724,9 +744,9 @@ const estimate NaoPose::sizeBasedEstimate(int pixelX, int pixelY, float objectHe
     //cout<<"ratio "<<ratio<<endl;
 
     ufvector4 pixelInCameraFrame =
-                vector4D( PIXEL_FOCAL_LENGTH,
-                          ((float)IMAGE_CENTER_X - (float)pixelX),
-                          ((float)IMAGE_CENTER_Y - (float)pixelY));
+	vector4D( PIXEL_FOCAL_LENGTH,
+		  ((float)IMAGE_CENTER_X - (float)pixelX),
+		  ((float)IMAGE_CENTER_Y - (float)pixelY));
 
     float pixelDistance = length(pixelInCameraFrame);
 
