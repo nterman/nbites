@@ -83,6 +83,8 @@ def gamePlaying(player):
 
       startPSO(player)
 
+      player.bestGaitScore = player.swarm.gBest
+
    return player.goLater('stopChangeGait')
 
 def gamePenalized(player):
@@ -174,6 +176,10 @@ def scoreGaitPerformance(player):
    player.printf("particle has moved %s times" % pso.getCurrentParticle().moves)
    player.printf("swarm has been regrouped %s times" % pso.regroupings)
    player.printf("best gait found has heuristic %s" % pso.gBest)
+
+   if heuristic > player.bestGaitScore:
+      player.brain.speech.enable()
+      player.brain.speech.say("Found new best gait!")
 
    pso.getCurrentParticle().setHeuristic(heuristic)
    pso.tickCurrentParticle()
