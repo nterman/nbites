@@ -168,7 +168,8 @@ void ScriptedProvider::setNextBodyCommand() {
 
 	// Replace the current command
 	PROF_ENTER(profiler, P_CHOPPED);
-	const bool useComPreviews = true;
+	// set to true to test out dynamically balanced scripted moves
+	const bool useComPreviews = false;
 	currCommand = chopper.chopCommand(currCommand_unchopped,
 					  useComPreviews);
 	PROF_EXIT(profiler, P_CHOPPED);
