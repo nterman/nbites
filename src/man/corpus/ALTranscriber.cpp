@@ -16,17 +16,12 @@ using namespace Kinematics;
 #include "ALNames.h"
 using namespace ALNames;
 
-static const float BOARD_ERROR_JUMP = 0.15;
-
 ALTranscriber::ALTranscriber (AL::ALPtr<AL::ALBroker> _broker,
                               boost::shared_ptr<Sensors> _sensors)
     :Transcriber(_sensors),
      broker(_broker),
      accelerationFilter(),
-     lastAngleX(0.0f), lastAngleY(0.0f),
-     accX_f(BOARD_ERROR_JUMP),
-     accY_f(BOARD_ERROR_JUMP),
-     accZ_f(BOARD_ERROR_JUMP)
+     lastAngleX(0.0f), lastAngleY(0.0f)
 {
     try{
         initSyncMotionWithALMemory();
@@ -174,19 +169,19 @@ static const float ACCEL_CONVERSION_Z = ACCEL_CONVERSION_X;
 const float ALTranscriber::calibrate_acc_x(const float x) {
     float moved = (x + ACCEL_OFFSET_X) * ACCEL_CONVERSION_X;
     //cout << "accX raw: " << x << " calibrated: " << moved << endl;
-    return accX_f.X(moved);
+    return moved;
 }
 
 const float ALTranscriber::calibrate_acc_y(const float y) {
     const float moved = (y + ACCEL_OFFSET_Y) * ACCEL_CONVERSION_Y;
     //cout << "accY raw: " << y << " calibrated: " << moved << endl;
-    return accY_f.X(moved);
+    return moved;
 }
 
 const float ALTranscriber::calibrate_acc_z(const float z) {
     const float moved = (z + ACCEL_OFFSET_Z) * ACCEL_CONVERSION_Z;
     //cout << "accZ raw: " << z << " calibrated " << moved << endl;
-    return accZ_f.X(moved);
+    return moved;
 }
 
 void ALTranscriber::syncMotionWithALMemory() {

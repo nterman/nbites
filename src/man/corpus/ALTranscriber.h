@@ -71,8 +71,6 @@ private: //Members
     float lastAngleX, lastAngleY;
     float lastReadAngleX, lastReadAngleY;
 
-    BoardError accX_f, accY_f, accZ_f;
-
 private: //Helper Methods
 
     //For the motion thread (enactor)
