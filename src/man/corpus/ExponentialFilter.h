@@ -21,6 +21,8 @@
  * @brief Exponential filter on an arbitrarily sized vector. Each update timestep
  * applies <vector T> = (alpha)<vector T-1> + (1-alpha)<sensor values>
  *
+ * NOTE: This class is stupid, and I'm sorry for it :-P
+ *
  * @date Septempter 2010
  * @author Nathan Merritt
  **/
@@ -30,7 +32,7 @@
 
 #include <boost/numeric/ublas/vector.hpp>
 
-const float DEFAULT_ALPHA = 0.85f;
+const float DEFAULT_ALPHA = 0.5f;
 
 template <class Measurement, unsigned int dimension>
 

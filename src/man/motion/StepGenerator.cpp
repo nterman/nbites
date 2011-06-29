@@ -30,6 +30,7 @@ using boost::shared_ptr;
 #include "StepGenerator.h"
 #include "NBMath.h"
 #include "Observer.h"
+#include "PreviewController.h"
 #include "BasicWorldConstants.h"
 #include "COMKinematics.h"
 #include "JointMassConstants.h"
@@ -194,10 +195,8 @@ void StepGenerator::findSensorZMP(){
     //We will use angleX, and angleY:
     /// @see NaoPose::transform() for another example
     const ufmatrix4 bodyToWorldTransform =
-        prod(CoordFrame4D::rotation4D(CoordFrame4D::Y_AXIS,
-				      -inertial.angleY),
-	     CoordFrame4D::rotation4D(CoordFrame4D::X_AXIS,
-				      -inertial.angleX));
+	CoordFrame4D::get6DTransform(0.0f, 0.0f, 0.0f,
+				     -inertial.angleX, -inertial.angleY, 0.0f);
 
     // update the IIR filter
     acc_filter.update(inertial.accX,
@@ -236,7 +235,8 @@ void StepGenerator::findSensorZMP(){
 
     ZmpTimeUpdate tUp = {controller_x->getZMP(), controller_y->getZMP()};
     ZmpMeasurement pMeasure =
-	{joint_com_i_x, joint_com_i_y,
+//	{joint_com_i_x, joint_com_i_y,
+	{controller_x->getPosition(), controller_y->getPosition(),
 	 pose->getBodyCenterHeight(),
 	 accel_i(0), accel_i(1)};
 
@@ -259,7 +259,7 @@ float StepGenerator::scaleSensors(const float sensorZMP,
 
     // If our motion sensors are broken, we don't want to use the observer
     if (brokenSensorWarning || sensors->angleXYBroken()) {
-	sensorWeight = 0.0f;
+	//sensorWeight = 0.0f;
 
 	// TODO: signal Python, so the robot can fall back to a slower gait
 
