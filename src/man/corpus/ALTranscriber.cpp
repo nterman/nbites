@@ -16,12 +16,17 @@ using namespace Kinematics;
 #include "ALNames.h"
 using namespace ALNames;
 
+static const float BOARD_ERROR_JUMP = 0.15;
+
 ALTranscriber::ALTranscriber (AL::ALPtr<AL::ALBroker> _broker,
                               boost::shared_ptr<Sensors> _sensors)
     :Transcriber(_sensors),
      broker(_broker),
      accelerationFilter(),
-     lastAngleX(0.0f), lastAngleY(0.0f)
+     lastAngleX(0.0f), lastAngleY(0.0f),
+     accX_f(BOARD_ERROR_JUMP),
+     accY_f(BOARD_ERROR_JUMP),
+     accZ_f(BOARD_ERROR_JUMP)
 {
     try{
         initSyncMotionWithALMemory();
@@ -163,22 +168,25 @@ static const float ACCEL_CONVERSION_Z = ACCEL_CONVERSION_X;
 // TODO: convert the gyro here similarly. For more information, see:
 // http://users.aldebaran-robotics.com/docs/save_doc_1.10.37/site_en/reddoc/dcm/mandatory_specific_almemory_keys.html
 
+/* The calls to the BoardError class filter out large jumps (usually board errors)
+   for accX/Y/Z before other filtering */
+
 const float ALTranscriber::calibrate_acc_x(const float x) {
     float moved = (x + ACCEL_OFFSET_X) * ACCEL_CONVERSION_X;
     //cout << "accX raw: " << x << " calibrated: " << moved << endl;
-    return moved;
+    return accX_f.X(moved);
 }
 
 const float ALTranscriber::calibrate_acc_y(const float y) {
     const float moved = (y + ACCEL_OFFSET_Y) * ACCEL_CONVERSION_Y;
     //cout << "accY raw: " << y << " calibrated: " << moved << endl;
-    return moved;
+    return accY_f.X(moved);
 }
 
 const float ALTranscriber::calibrate_acc_z(const float z) {
     const float moved = (z + ACCEL_OFFSET_Z) * ACCEL_CONVERSION_Z;
     //cout << "accZ raw: " << z << " calibrated " << moved << endl;
-    return moved;
+    return accZ_f.X(moved);
 }
 
 void ALTranscriber::syncMotionWithALMemory() {
@@ -212,6 +220,7 @@ void ALTranscriber::syncMotionWithALMemory() {
         angleY = sensorValues[15];//,-M_PI_FLOAT,M_PI_FLOAT);
 
     accelerationFilter.update(accX, accY, accZ);
+
     const float filteredX = accelerationFilter.getX();
     const float filteredY = accelerationFilter.getY();
     const float filteredZ = accelerationFilter.getZ();
@@ -234,36 +243,36 @@ void ALTranscriber::syncMotionWithALMemory() {
     lastReadAngleX = angleX;
     lastReadAngleY = angleY;
 
-	// so the FSRs etc. aren't allocated each time
-	static FSR leftFSR, rightFSR;
+    // so the FSRs etc. aren't allocated each time
+    static FSR leftFSR, rightFSR;
 
-	leftFSR.frontLeft = LfrontLeft;
-	leftFSR.frontRight = LfrontRight;
-	leftFSR.rearLeft = LrearLeft;
-	leftFSR.rearRight = LrearRight;
+    leftFSR.frontLeft = LfrontLeft;
+    leftFSR.frontRight = LfrontRight;
+    leftFSR.rearLeft = LrearLeft;
+    leftFSR.rearRight = LrearRight;
 
-	rightFSR.frontLeft = RfrontLeft;
-	rightFSR.frontRight = RfrontRight;
-	rightFSR.rearLeft = RrearLeft;
-	rightFSR.rearRight = RrearRight;
+    rightFSR.frontLeft = RfrontLeft;
+    rightFSR.frontRight = RfrontRight;
+    rightFSR.rearLeft = RrearLeft;
+    rightFSR.rearRight = RrearRight;
 
-	static Inertial filtered, unfiltered;
+    static Inertial filtered, unfiltered;
 
-	filtered.accX = filteredX;
-	filtered.accY = filteredY;
-	filtered.accZ = filteredZ;
-	filtered.gyrX = gyrX;
-	filtered.gyrY = gyrY;
-	filtered.angleX = filteredAngleX;
-	filtered.angleY = filteredAngleY;
+    filtered.accX = filteredX;
+    filtered.accY = filteredY;
+    filtered.accZ = filteredZ;
+    filtered.gyrX = gyrX;
+    filtered.gyrY = gyrY;
+    filtered.angleX = filteredAngleX;
+    filtered.angleY = filteredAngleY;
 
-	unfiltered.accX = accX;
-	unfiltered.accY = accY;
-	unfiltered.accZ = accZ;
-	unfiltered.gyrX = gyrX;
-	unfiltered.gyrY = gyrY;
-	unfiltered.angleX = angleX;
-	unfiltered.angleY = angleY;
+    unfiltered.accX = accX;
+    unfiltered.accY = accY;
+    unfiltered.accZ = accZ;
+    unfiltered.gyrX = gyrX;
+    unfiltered.gyrY = gyrY;
+    unfiltered.angleX = angleX;
+    unfiltered.angleY = angleY;
 
     sensors->
         setMotionSensors(leftFSR, rightFSR,

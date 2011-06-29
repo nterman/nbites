@@ -70,6 +70,7 @@ SET( SENSORS_SRCS Sensors
   PySensors
   NaoPose
   CameraCalibrate
+  BoardError
   )
 
 
