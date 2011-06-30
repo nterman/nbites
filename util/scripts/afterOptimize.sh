@@ -30,7 +30,7 @@ echo "Fetching gait..."
 echo $FETCH_GAIT
 eval $FETCH_GAIT || exit 1
 
-SERVER="$username@robocup.bowdoin.edu"
+SERVER="$username@dover.bowdoin.edu"
 
 # back up the old gait file
 NOW=`date "+%m_%d_%H_%M"`  # month_day_hour_minute

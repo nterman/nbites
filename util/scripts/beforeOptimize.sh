@@ -22,7 +22,7 @@ fi
 echo "Type username for RoboCup server, followed by [ENTER]"
 read username
 
-SERVER=$username@robocup.bowdoin.edu
+SERVER=$username@dover.bowdoin.edu
 ROBOCUP_DIR=/mnt/research/robocup
 PSO_DIR=gait-pso/swarms
 PICKLE="PSO_pGaitLearner.pickle"
