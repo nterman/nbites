@@ -10,18 +10,16 @@
 
 ALSpeech::ALSpeech(AL::ALPtr<AL::ALBroker> broker) : Speech(), volume(0)
 {
-#ifdef USING_TTS
     try {
         alProxy =
             AL::ALPtr<AL::ALTextToSpeechProxy>(
                 new AL::ALTextToSpeechProxy(broker));
-
+        volume = alProxy->getVolume();
     } catch(AL::ALError &e) {
         std::cout << "Failed to initialize proxy to ALTextToSpeech"
                   << std::endl;
     }
-    volume = alProxy->getVolume();
-#endif /* USING_TTS */
+    setVolume(.95f);
 }
 
 ALSpeech::~ALSpeech()
@@ -31,22 +29,28 @@ ALSpeech::~ALSpeech()
 
 void ALSpeech::say(std::string text)
 {
-#ifdef USING_TTS
     if (isEnabled){
         replaceSymbols(text);
-        alProxy->say(text);
+        try {
+            alProxy->say(text);
+        } catch(AL::ALError &e) {
+            std::cout << "Failed to say something in ALTextToSpeech"
+                      << std::endl;
+        }
     }
-#endif /* USING_TTS */
 }
 
 void ALSpeech::setVolume(float v)
 {
-#ifdef USING_TTS
     if (v != volume){
         volume = v;
-        alProxy->setVolume(v);
+        try {
+            alProxy->setVolume(v);
+        } catch(AL::ALError &e) {
+            std::cout << "Failed to set ALTextToSpeech volume"
+                      << std::endl;
+        }
     }
-#endif /* USING_TTS */
 }
 
 float ALSpeech::getVolume()
@@ -54,6 +58,9 @@ float ALSpeech::getVolume()
     return volume;
 }
 
+/**
+ * We don't want to pronounce punctuation
+ */
 void ALSpeech::replaceSymbols(std::string& text)
 {
     replace(text.begin(), text.end(), '_', ' ');

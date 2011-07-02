@@ -1,4 +1,4 @@
-from .. import NogginConstants
+import noggin_constants as NogginConstants
 from ..playbook.PBConstants import GOALIE
 import ChaseBallTransitions as transitions
 PENALTY_RELOCALIZE_FRAMES = 100
@@ -23,17 +23,6 @@ def penaltyKickRelocalize(player):
             player.counter < PENALTY_RELOCALIZE_FRAMES:
         return player.stay()
     return player.goLater('findBall')
-
-def penaltyGoalie(player):
-    """
-    Set penalty kicking variables. Acts as a layer above 'goaliePosition'
-    """
-    player.penaltyKicking = True
-    player.penaltyMadeFirstKick = True
-    player.penaltyMadeSecondKick = False
-
-    roleState = player.getRoleState(GOALIE)
-    return player.goLater(roleState)
 
 def penaltyBallInOppGoalbox(player):
     """

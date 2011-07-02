@@ -14,6 +14,7 @@
 #include "PyMotion.h"
 #include "PyLights.h"
 #include "PySpeech.h"
+#include "PyObjects.h"
 
 //#define DEBUG_POST_OBSERVATIONS
 //#define DEBUG_CORNER_OBSERVATIONS
@@ -28,6 +29,8 @@ static const float MAX_CROSS_DISTANCE = 150.0f;
 using namespace std;
 using namespace boost;
 
+using namespace man::memory::log;
+
 #ifdef LOG_LOCALIZATION
 fstream outputFile;
 #include <ctime>
@@ -35,14 +38,16 @@ fstream outputFile;
 
 const char * BRAIN_MODULE = "man.noggin.Brain";
 const int TEAMMATE_FRAMES_OFF_THRESH = 5;
-Noggin::Noggin (shared_ptr<Profiler> p, shared_ptr<Vision> v,
+Noggin::Noggin (shared_ptr<Vision> v,
                 shared_ptr<Comm> c, shared_ptr<RoboGuardian> rbg,
-                shared_ptr<Sensors> _sensors, MotionInterface * _minterface)
-    : profiler(p),
-      vision(v),
+                shared_ptr<Sensors> _sensors, shared_ptr<LoggingBoard> loggingBoard,
+                MotionInterface * _minterface
+                )
+    : vision(v),
       comm(c),
       gc(c->getGC()),
       sensors(_sensors),
+      loggingBoard(loggingBoard),
       chestButton(rbg->getButton(CHEST_BUTTON)),
       leftFootButton(rbg->getButton(LEFT_FOOT_BUTTON)),
       rightFootButton(rbg->getButton(RIGHT_FOOT_BUTTON)),
@@ -87,6 +92,9 @@ void Noggin::initializePython()
     printf("  Initializing interpreter and extension modules\n");
 #   endif
 
+    // Initialize localization stuff
+    initializeLocalization();
+
     Py_Initialize();
 
     modifySysPath();
@@ -101,14 +109,17 @@ void Noggin::initializePython()
     c_init_roboguardian();
     c_init_motion();
     c_init_comm();
+    c_init_logging();
     comm->add_to_module();
 
     // Initialize PyVision module
     c_init_vision();
 
-    // Initialize localization stuff
-    initializeLocalization();
+    // Initlialize PyConstants module
+    c_init_noggin_constants();
 
+    // Initialize PyLocation module
+    c_init_objects();
 }
 
 void Noggin::initializeLocalization()
@@ -246,18 +257,18 @@ void Noggin::runStep ()
     //Check button pushes for game controller signals
     processGCButtonClicks();
 
-    PROF_ENTER(profiler, P_PYTHON);
+    PROF_ENTER(P_PYTHON);
 
 #   ifdef RUN_LOCALIZATION
     // Update localization information
-    PROF_ENTER(profiler, P_LOC);
+    PROF_ENTER(P_LOC);
     updateLocalization();
-    PROF_EXIT(profiler, P_LOC);
+    PROF_EXIT(P_LOC);
 #   endif //RUN_LOCALIZATION
 
 
     // Call main run() method of Brain
-    PROF_ENTER(profiler, P_PYRUN);
+    PROF_ENTER(P_PYRUN);
     if (brain_instance != NULL) {
         PyObject *result = PyObject_CallMethod(brain_instance, "run", NULL);
         if (result == NULL) {
@@ -275,9 +286,9 @@ void Noggin::runStep ()
             Py_DECREF(result);
         }
     }
-    PROF_EXIT(profiler, P_PYRUN);
+    PROF_EXIT(P_PYRUN);
 
-    PROF_EXIT(profiler, P_PYTHON);
+    PROF_EXIT(P_PYTHON);
 }
 
 void Noggin::updateLocalization()
@@ -357,9 +368,9 @@ void Noggin::updateLocalization()
 #   endif
 
     // Process the information
-    PROF_ENTER(profiler, P_MCL);
+    PROF_ENTER(P_MCL);
     loc->updateLocalization(odometery, pt_observations, corner_observations);
-    PROF_EXIT(profiler, P_MCL);
+    PROF_EXIT(P_MCL);
 
     // Ball Tracking
     if (vision->ball->getDistance() > 0.0) {
@@ -379,6 +390,7 @@ void Noggin::updateLocalization()
         RangeBearingMeasurement k(vision->ball);
         m = k;
     } else {
+
         // If it's off for more then the threshold, then try and use mate data
         TeammateBallMeasurement n;
 #       ifdef USE_TEAMMATE_BALL_REPORTS
@@ -386,13 +398,16 @@ void Noggin::updateLocalization()
         if (!(n.ballX == 0.0 && n.ballY == 0.0) &&
             !(gc->gameState() == STATE_INITIAL ||
               gc->gameState() == STATE_FINISHED)) {
+
             m.distance = hypotf(loc->getXEst() - n.ballX,
                                loc->getYEst() - n.ballY);
             m.bearing = subPIAngle(atan2(n.ballY - loc->getYEst(),
                                          n.ballX - loc->getXEst()) -
                                    loc->getHEst());
+
             m.distanceSD = vision->ball->ballDistanceToSD(m.distance);
             m.bearingSD =  vision->ball->ballBearingToSD(m.bearing);
+
 #           ifdef DEBUG_TEAMMATE_BALL_OBSERVATIONS
             cout << setprecision(4)
                  << "Using teammate ball report of (" << m.distance << ", "
@@ -400,11 +415,13 @@ void Noggin::updateLocalization()
                  << "(" << n.ballX << ", " << n.ballY << ")" << endl;
             cout << *ballEKF << endl;
 #           endif
+
         }
 #       endif
     }
 
-    ballEKF->updateModel(m, loc->getCurrentEstimate());
+    ballEKF->updateModel(odometery, m, loc->getCurrentEstimate());
+
 #   ifdef LOG_LOCALIZATION
     if (loggingLoc) {
         // Print out odometry and ball readings

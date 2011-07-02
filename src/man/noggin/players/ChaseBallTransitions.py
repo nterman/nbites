@@ -1,7 +1,7 @@
 import man.motion.SweetMoves as SweetMoves
 import man.motion.HeadMoves as HeadMoves
 import ChaseBallConstants as constants
-from .. import NogginConstants
+import noggin_constants as NogginConstants
 from math import fabs
 
 ####### CHASING STUFF ##############
@@ -11,7 +11,7 @@ def shouldChaseBall(player):
     We see the ball. So go get it.
     """
     ball = player.brain.ball
-    return (ball.framesOn > constants.BALL_ON_THRESH)
+    return (ball.vis.framesOn > constants.BALL_ON_THRESH)
 
 def shouldChaseFromPositionForKick(player):
     """
@@ -75,6 +75,33 @@ def shouldSpinToBall(player):
              ball.dist < constants.SHOULD_STOP_BEFORE_KICK_DIST) or
              ball.relX <= 9.5))
 
+def ballInPosition(player):
+    """
+    Make sure ball is somewhere we will kick it
+    """
+    ball = player.brain.ball
+    kick = player.brain.kickDecider.getKick()
+    #Get the current kick sweet spot information
+    (x_offset, y_offset, heading) = kick.getPosition()
+
+    #Get the difference
+    diff_x = fabs(x_offset - ball.relX)
+    diff_y = fabs(y_offset - ball.relY)
+
+    #Compare the sweet spot with the actual values and make sure they
+    #are within the threshold
+    return (diff_x < constants.BALL_X_OFFSET and
+            diff_y < constants.BALL_Y_OFFSET)
+
+def ballNearPosition(player):
+    """
+    Ball is around our feet. Maybe we wiffed?
+    """
+    ball = player.brain.ball
+    return ((constants.SHOULD_KICK_AGAIN_CLOSE_X < ball.relX <
+              constants.SHOULD_KICK_AGAIN_FAR_X) and
+             fabs(ball.relY) < constants.SHOULD_KICK_AGAIN_Y)
+
 def shouldKick(player):
     """
     Ball is in correct position to kick
@@ -85,11 +112,7 @@ def shouldKickAgain(player):
     """
     Ball hasn't changed enough to warrant new kick decision.
     """
-    ball = player.brain.ball
-    return (shouldKick(player) and
-            (constants.SHOULD_KICK_AGAIN_CLOSE_X < ball.relX <
-             constants.SHOULD_KICK_AGAIN_FAR_X) and
-            fabs(ball.relY) < constants.SHOULD_KICK_AGAIN_Y)
+    return (shouldKick(player) and ballNearPosition(player))
 
 def shouldDribble(player):
     """
@@ -160,13 +183,13 @@ def shouldFindBall(player):
     """
     We lost the ball, scan to find it
     """
-    return (player.brain.ball.framesOff > constants.BALL_OFF_THRESH)
+    return (player.brain.ball.vis.framesOff > constants.BALL_OFF_THRESH)
 
 def shouldFindBallKick(player):
     """
     We lost the ball while in a kicking state, be more generous before looking
     """
-    return (player.brain.ball.framesOff > constants.BALL_OFF_KICK_THRESH)
+    return (player.brain.ball.vis.framesOff > constants.BALL_OFF_KICK_THRESH)
 
 def shouldSpinFindBall(player):
     """

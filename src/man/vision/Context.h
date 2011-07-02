@@ -120,6 +120,8 @@ public:
     void checkConnectedTs(VisualCorner & first, VisualCorner & second);
     void checkInnerToOuter(VisualCorner & inner, VisualCorner & outer);
     void checkOuterToOuter(VisualCorner & inner, VisualCorner & outer);
+	void checkForBadTID(VisualCorner & first, VisualCorner & second,
+						boost::shared_ptr<VisualLine> common);
     void checkTToCenter(VisualCorner & first, VisualCorner & second);
     void checkTToGoal(VisualCorner & t, VisualCorner & l1,
                       boost::shared_ptr<VisualLine> common);
@@ -134,6 +136,10 @@ public:
     void lookForFieldCorner(VisualCorner & first, float l1, float l2);
     void classifyInnerL(VisualCorner & first);
     void classifyOuterL(VisualCorner &first);
+	void classifyOuterLMidAngle(VisualCorner & corner,
+								boost::shared_ptr<VisualLine> shorty,
+								boost::shared_ptr<VisualLine> longy);
+
     void classifyT(VisualCorner &first);
 
     const std::list<const ConcreteCorner*> classifyCornerWithObjects(

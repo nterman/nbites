@@ -1,5 +1,5 @@
-from .. import NogginConstants
-from ..typeDefs.Location import Location
+import noggin_constants as NogginConstants
+from objects import Location
 
 SUPER_SAFE_KICKS = False # Only kick straight when we see the goal
 MAX_FORWARD_KICK_ANGLE = 55
@@ -73,3 +73,5 @@ ORBIT_OWN_GOAL_ANGLE_THRESH = 30
 ORBIT_OWN_GOAL_HEADING_THRESH = 150
 
 KICK_STRAIGHT_POST_BEARING = 10
+
+

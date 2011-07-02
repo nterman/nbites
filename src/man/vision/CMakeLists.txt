@@ -52,7 +52,7 @@ CONFIGURE_FILE(
 INCLUDE_DIRECTORIES( ${NBCOMMON_INCLUDE_DIR}
                      ${PYTHON_INCLUDE_PATH}
                      ${BOOST_INCLUDE_DIR}
-		     ${CFG_DIR}
+                     ${CFG_DIR}
                      )
 
 ############################ PROJECT SOURCES FILES
@@ -80,7 +80,7 @@ SET( VISION_SRCS Ball
                  VisualCrossbar
                  VisualCorner
                  VisualDetection
-		 VisualFieldEdge
+                 VisualFieldEdge
                  VisualLandmark
                  VisualFieldObject
                  VisualRobot
@@ -105,7 +105,7 @@ SET_PROPERTY(SOURCE
  PROPERTY LANGUAGE C)
 ENDIF()
 
-SET( VISION_PYTHON_SRCS vision.py
+SET( VISION_PYTHON_SRCS
    )
 
 ############################ CHECK LIBRARY / EXECUTABLE OPTION
@@ -173,8 +173,7 @@ IF( VISIONLINK )
                         ${VISION_TARGET}
                         ${SENSORS_TARGET}
                         ${NBINCLUDE_TARGET}
-			${ROBOT_CONNECT_TARGET}
-			)
+                       )
 ENDIF( VISIONLINK )
 
 

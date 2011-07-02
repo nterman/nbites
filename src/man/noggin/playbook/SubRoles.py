@@ -1,14 +1,27 @@
 from . import PBConstants
-from .. import NogginConstants
+import noggin_constants as NogginConstants
 from ..util import MyMath
-
+from objects import Location
 
 #### Goalie sub roles ####
+
+def pGoalieKickOff(team, workingPlay):
+    """ keeps the goalie from moving on kickoff"""
+    workingPlay.setSubRole(PBConstants.GOALIE_KICKOFF)
+    h = team.brain.ball.heading
+    pos = (PBConstants.GOALIE_HOME_X, PBConstants.GOALIE_HOME_Y, h)
+
+    if PBConstants.USE_FANCY_GOALIE:
+        pos = team.fancyGoaliePosition()
+
+    workingPlay.setPosition(pos)
 
 def pGoalieCenter(team, workingPlay):
     """normal goalie position in the center of the goal"""
     workingPlay.setSubRole(PBConstants.GOALIE_CENTER)
-    h = team.brain.ball.heading
+    dest = Location(PBConstants.GOALIE_HOME_X,
+                             PBConstants.GOALIE_HOME_Y)
+    h = dest.headingTo(team.brain.ball)
     pos = (PBConstants.GOALIE_HOME_X, PBConstants.GOALIE_HOME_Y, h)
 
     if PBConstants.USE_FANCY_GOALIE:
@@ -16,34 +29,12 @@ def pGoalieCenter(team, workingPlay):
 
     workingPlay.setPosition(pos)
 
-def pGoaliePosRight(team, workingPlay):
-    """goalie position right side of goal"""
-
-    workingPlay.setSubRole(PBConstants.GOALIE_RIGHT)
-    h = team.brain.ball.heading
-    pos = (PBConstants.GOALIE_RIGHT_X, PBConstants.GOALIE_RIGHT_Y, h)
-
-    if PBConstants.USE_FANCY_GOALIE:
-        pos = team.fancyGoaliePosition()
-
-    workingPlay.setPosition(pos)
-
-def pGoaliePosLeft(team, workingPlay):
-    """goalie position left side of goal"""
-
-    workingPlay.setSubRole(PBConstants.GOALIE_LEFT)
-    h = team.brain.ball.heading
-    pos = (PBConstants.GOALIE_LEFT_X, PBConstants.GOALIE_LEFT_Y, h)
-
-    if PBConstants.USE_FANCY_GOALIE:
-        pos = team.fancyGoaliePosition()
-
-    workingPlay.setPosition(pos)
-
 def pGoalieSave(team, workingPlay):
     """ goalie saving """
     workingPlay.setSubRole(PBConstants.GOALIE_SAVE)
-    h = team.brain.ball.heading
+    dest = Location(PBConstants.GOALIE_HOME_X,
+                             PBConstants.GOALIE_HOME_Y)
+    h = dest.headingTo(team.brain.ball)
     pos = (PBConstants.GOALIE_HOME_X, PBConstants.GOALIE_HOME_Y, h)
 
     if PBConstants.USE_FANCY_GOALIE:
@@ -55,25 +46,15 @@ def pGoalieChaser(team, workingPlay):
     """goalie is being a chaser, presumably in/near goalbox not intended for
         pulling the goalie situations"""
     workingPlay.setSubRole(PBConstants.GOALIE_CHASER)
-    h = team.brain.ball.heading
+    dest = Location(PBConstants.GOALIE_HOME_X,
+                             PBConstants.GOALIE_HOME_Y)
+    h = dest.headingTo(team.brain.ball)
     pos = (PBConstants.GOALIE_HOME_X, PBConstants.GOALIE_HOME_Y, h)
 
     if PBConstants.USE_FANCY_GOALIE:
        pos = team.fancyGoaliePosition()
 
     workingPlay.setPosition(pos)
-
-def pGoaliePenaltySaver(team, workingPlay):
-    """ goalie is in penalty kick situation"""
-    workingPlay.setSubRole(PBConstants.GOALIE_PENALTY_SAVER)
-    h = team.brain.ball.heading
-    pos = (PBConstants.GOALIE_HOME_X, PBConstants.GOALIE_HOME_Y, h)
-
-    if PBConstants.USE_FANCY_GOALIE:
-       pos = team.fancyGoaliePosition()
-
-    workingPlay.setPosition(pos)
-
 
 #### Chaser sub roles ####
 
@@ -91,7 +72,8 @@ def pSweeper(team, workingPlay):
     y = PBConstants.SWEEPER_Y
     y += PBConstants.SWEEPER_Y_OFFSET * \
         MyMath.sign(team.brain.ball.y-NogginConstants.CENTER_FIELD_Y)
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x, y, h)
     workingPlay.setPosition(pos)
@@ -99,14 +81,18 @@ def pSweeper(team, workingPlay):
 def pRightDeepBack(team, workingPlay):
     """position deep left back"""
     workingPlay.setSubRole(PBConstants.RIGHT_DEEP_BACK)
-    h = team.brain.ball.heading
+    dest = Location(PBConstants.DEEP_BACK_X,
+                             PBConstants.RIGHT_DEEP_BACK_Y)
+    h = dest.headingTo(team.brain.ball)
     pos = (PBConstants.DEEP_BACK_X, PBConstants.RIGHT_DEEP_BACK_Y,h)
     workingPlay.setPosition(pos)
 
 def pLeftDeepBack(team, workingPlay):
     """position deep right back"""
     workingPlay.setSubRole(PBConstants.LEFT_DEEP_BACK)
-    h = team.brain.ball.heading
+    dest = Location(PBConstants.DEEP_BACK_X,
+                             PBConstants.LEFT_DEEP_BACK_Y)
+    h = dest.headingTo(team.brain.ball)
     pos = (PBConstants.DEEP_BACK_X, PBConstants.LEFT_DEEP_BACK_Y,h)
     workingPlay.setPosition(pos)
 
@@ -121,7 +107,8 @@ def pCenterBack(team, workingPlay):
     y = MyMath.clip(y,
                     PBConstants.MIN_CENTER_BACK_Y,
                     PBConstants.MAX_CENTER_BACK_Y)
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x, y, h)
     workingPlay.setPosition(pos)
@@ -133,7 +120,8 @@ def pStopper(team, workingPlay):
     y = MyMath.clip(team.brain.ball.y,
                     PBConstants.MIN_STOPPER_Y,
                     PBConstants.MAX_STOPPER_Y)
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x, y, h)
     workingPlay.setPosition(pos)
@@ -146,7 +134,8 @@ def pPicker(team, workingPlay):
     workingPlay.setSubRole(PBConstants.PICKER)
     x = PBConstants.PICKER_X
     y = PBConstants.PICKER_Y
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x,y,h)
     workingPlay.setPosition(pos)
@@ -155,10 +144,12 @@ def pLeftWing(team, workingPlay):
     """position left winger"""
     workingPlay.setSubRole(PBConstants.LEFT_WING)
     midpoint = (PBConstants.WING_MAX_X - PBConstants.WING_MIN_X)*.5
-    scale = (PBConstants.WING_MAX_X - midpoint)/(PBConstants.PICKER_X_THRESH - midpoint)
+    scale = (PBConstants.WING_MAX_X - midpoint)/(PBConstants.PICKER_X_THRESH -
+                                                 midpoint)
     x = -1*scale*(team.brain.ball.x - midpoint)
     y = PBConstants.LEFT_WING_Y
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x,y,h)
     workingPlay.setPosition(pos)
@@ -167,10 +158,12 @@ def pRightWing(team, workingPlay):
     """position right winger"""
     workingPlay.setSubRole(PBConstants.RIGHT_WING)
     midpoint = (PBConstants.WING_MAX_X - PBConstants.WING_MIN_X)*.5
-    scale = (PBConstants.WING_MAX_X - midpoint)/(PBConstants.PICKER_X_THRESH - midpoint)
+    scale = (PBConstants.WING_MAX_X - midpoint)/(PBConstants.PICKER_X_THRESH -
+                                                 midpoint)
     x = -1*scale*(team.brain.ball.x - midpoint)
     y = PBConstants.RIGHT_WING_Y
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x, y, h)
     workingPlay.setPosition(pos)
@@ -183,7 +176,8 @@ def pStriker(team, workingPlay):
         y = PBConstants.LEFT_STRIKER_Y
     else:
         y = PBConstants.RIGHT_STRIKER_Y
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x, y, h)
     workingPlay.setPosition(pos)
@@ -196,7 +190,8 @@ def pForward(team, workingPlay):
         y = PBConstants.LEFT_FORWARD_Y
     else:
         y = PBConstants.RIGHT_FORWARD_Y
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x, y, h)
     workingPlay.setPosition(pos)
@@ -208,7 +203,8 @@ def pDefensiveMiddie(team, workingPlay):
     y = MyMath.clip(team.brain.ball.y,
                     PBConstants.MIN_MIDDIE_Y,
                     PBConstants.MAX_MIDDIE_Y)
-    h = team.brain.ball.heading
+    dest = Location(PBConstants.DEFENSIVE_MIDDIE_X, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (PBConstants.DEFENSIVE_MIDDIE_X, y, h)
     workingPlay.setPosition(pos)
@@ -218,7 +214,8 @@ def pOffensiveMiddie(team, workingPlay):
     y = MyMath.clip(team.brain.ball.y,
                     PBConstants.MIN_MIDDIE_Y,
                     PBConstants.MAX_MIDDIE_Y)
-    h = team.brain.ball.heading
+    dest = Location(PBConstants.OFFENSIVE_MIDDIE_X, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (PBConstants.OFFENSIVE_MIDDIE_X, y, h)
     workingPlay.setPosition(pos)
@@ -230,7 +227,8 @@ def pDubDMiddie(team, workingPlay):
                     PBConstants.MIN_MIDDIE_Y,
                     PBConstants.MAX_MIDDIE_Y)
     x = PBConstants.OFFENSIVE_MIDDIE_X
-    h = team.brain.ball.heading
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x, y, h)
     workingPlay.setPosition(pos)
@@ -241,12 +239,13 @@ def pKickoffSweeper(team, workingPlay):
     """position kickoff sweeper"""
     workingPlay.setSubRole(PBConstants.KICKOFF_SWEEPER)
     x = PBConstants.KICKOFF_DEFENDER_X
-    h = team.brain.my.headingTo(PBConstants.CENTER_FIELD)
-
     if team.kickoffFormation == 0:
         y = PBConstants.KICKOFF_DEFENDER_0_Y
     else:
         y = PBConstants.KICKOFF_DEFENDER_1_Y
+
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x,y,h)
     workingPlay.setPosition(pos)
@@ -255,12 +254,13 @@ def pKickoffStriker(team, workingPlay):
     """position kickoff striker"""
     workingPlay.setSubRole(PBConstants.KICKOFF_STRIKER)
     x = PBConstants.KICKOFF_OFFENDER_X
-    h = team.brain.my.headingTo(PBConstants.CENTER_FIELD)
-
     if team.kickoffFormation == 0:
         y = PBConstants.KICKOFF_OFFENDER_0_Y
     else:
         y = PBConstants.KICKOFF_OFFENDER_1_Y
+
+    dest = Location(x, y)
+    h = dest.headingTo(team.brain.ball)
 
     pos = (x,y,h)
     workingPlay.setPosition(pos)
@@ -278,7 +278,8 @@ def pReadyChaser(team, workingPlay):
             y = PBConstants.READY_NON_KICKOFF_CHASER_0_Y
         else:
             y = PBConstants.READY_NON_KICKOFF_CHASER_1_Y
-    h = team.brain.my.headingTo(PBConstants.CENTER_FIELD)
+    dest = Location(x, y)
+    h = dest.headingTo(PBConstants.CENTER_FIELD)
 
     pos = (x,y,h)
     workingPlay.setPosition(pos)
@@ -298,7 +299,8 @@ def pReadyOffender(team, workingPlay):
             y = PBConstants.READY_NON_KICKOFF_OFFENDER_0_Y
         else:
             y = PBConstants.READY_NON_KICKOFF_OFFENDER_1_Y
-    h = team.brain.my.headingTo(PBConstants.CENTER_FIELD)
+    dest = Location(x, y)
+    h = dest.headingTo(PBConstants.CENTER_FIELD)
 
     pos = (x,y,h)
     workingPlay.setPosition(pos)
@@ -318,7 +320,8 @@ def pReadyDefender(team, workingPlay):
             y = PBConstants.READY_NON_KICKOFF_DEFENDER_0_Y
         else:
             y = PBConstants.READY_NON_KICKOFF_DEFENDER_1_Y
-    h = team.brain.my.headingTo(PBConstants.CENTER_FIELD)
+    dest = Location(x, y)
+    h = dest.headingTo(PBConstants.CENTER_FIELD)
 
     pos = (x,y,h)
     workingPlay.setPosition(pos)
@@ -326,7 +329,9 @@ def pReadyDefender(team, workingPlay):
 def pReadyGoalie(team, workingPlay):
     """Go to our home position during ready"""
     workingPlay.setSubRole(PBConstants.READY_GOALIE)
+    dest = Location(PBConstants.GOALIE_HOME_X,
+                             PBConstants.GOALIE_HOME_Y)
     position = (PBConstants.GOALIE_HOME_X,
                 PBConstants.GOALIE_HOME_Y,
-                team.brain.my.headingTo(PBConstants.CENTER_FIELD))
+                dest.headingTo(PBConstants.CENTER_FIELD))
     workingPlay.setPosition(position)

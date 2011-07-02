@@ -41,6 +41,12 @@ VisualCorner::VisualCorner(const int _x, const int _y,
     // Calculate and set the standard deviation of the measurements
     setDistanceSD(cornerDistanceToSD(_distance));
     setBearingSD(cornerBearingToSD(_bearing));
+	setAngleX( static_cast<float>(HALF_IMAGE_WIDTH - _x) /
+			   static_cast<float>(HALF_IMAGE_WIDTH) *
+			   MAX_BEARING_RAD);
+	setAngleY(static_cast<float>(HALF_IMAGE_HEIGHT - _y) /
+			  static_cast<float>(HALF_IMAGE_HEIGHT) *
+			  MAX_ELEVATION_RAD);
 }
 
 VisualCorner::~VisualCorner() {}
@@ -83,9 +89,16 @@ void VisualCorner::determineCornerShape() {
     if (Utility::tValueInMiddleOfLine(t1, line1->getLength(),
                                       max(line2->getAvgWidth(),
                                           MIN_EXTEND_DIST))) {
-        cornerType = T;
-        tBar = line1;
-        tStem = line2;
+		if(Utility::tValueInMiddleOfLine(t2, line2->getLength(),
+										 max(line1->getAvgWidth(),
+											 MIN_EXTEND_DIST))) {
+			cornerType = CIRCLE;
+			//cout << "Caught a bad T" << endl;
+		} else {
+			cornerType = T;
+			tBar = line1;
+			tStem = line2;
+		}
     } else if(Utility::tValueInMiddleOfLine(t2, line2->getLength(),
                                             max(line1->getAvgWidth(),
                                                 MIN_EXTEND_DIST))) {

@@ -1,7 +1,7 @@
-from math import fabs, sqrt, pow
+from math import fabs, sqrt
 from . import NavConstants as constants
 from man.noggin.util import MyMath
-from man.noggin import NogginConstants
+import noggin_constants as NogginConstants
 
 def atDestinationCloser(my, dest):
     """
@@ -14,8 +14,8 @@ def atDestinationCloser(my, dest):
     #return diffX < my.uncertX and diffY < my.uncertY
 
     return my.distTo(dest) < (constants.CLOSER_XY +
-                              sqrt(pow(my.uncertX, 2) + 
-                                   pow(my.uncertY, 2)))
+                              sqrt(my.uncertX**2. +
+                                   my.uncertY**2.))
 
 def atDestinationCloserAndFacing(my, dest, bearing):
     return (atDestinationCloser(my, dest) and \

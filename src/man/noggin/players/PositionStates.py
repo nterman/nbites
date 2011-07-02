@@ -1,4 +1,4 @@
-from .. import NogginConstants
+import noggin_constants as NogginConstants
 from . import ChaseBallConstants as ChaseConstants
 import man.motion.HeadMoves as HeadMoves
 import man.noggin.util.MyMath as MyMath
@@ -16,8 +16,6 @@ def playbookPosition(player):
     """
     brain = player.brain
     nav = brain.nav
-    my = brain.my
-    ball = brain.ball
     gcState = brain.gameController.currentState
 
     if player.firstFrame():
@@ -34,8 +32,8 @@ def relocalize(player):
     if player.firstFrame():
         player.setWalk(constants.RELOC_X_SPEED, 0, 0)
 
-    if player.brain.my.locScore == NogginConstants.GOOD_LOC or \
-            player.brain.my.locScore == NogginConstants.OK_LOC:
+    if player.brain.my.locScore == NogginConstants.locScore.GOOD_LOC or \
+            player.brain.my.locScore == NogginConstants.locScore.OK_LOC:
         player.shouldRelocalizeCounter += 1
 
         if player.shouldRelocalizeCounter > 30:

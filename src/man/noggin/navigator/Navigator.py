@@ -7,7 +7,7 @@ from . import PFKStates
 from . import NavConstants as constants
 from . import NavTransitions as navTrans
 from . import NavHelper as helper
-from man.noggin.typeDefs.Location import RobotLocation
+from objects import RobotLocation
 
 class Navigator(FSA.FSA):
     def __init__(self,brain):
@@ -99,21 +99,6 @@ class Navigator(FSA.FSA):
 
     def isStopped(self):
         return self.currentState == 'stopped'
-
-    def orbit(self, orbitDir):
-
-        # If the orbit direction is the same ignore the command
-        if (self.orbitDir == orbitDir):
-            self.updatedTrajectory = False
-            return
-
-        self.orbitDir = orbitDir
-        self.walkX = 0
-        self.walkY = self.orbitDir*constants.ORBIT_STRAFE_SPEED
-        self.walkTheta = self.orbitDir*constants.ORBIT_SPIN_SPEED
-        self.updatedTrajectory = True
-
-        self.switchTo('orbitPoint')
 
     def orbitAngle(self, angleToOrbit):
 
