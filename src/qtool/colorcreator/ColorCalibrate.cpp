@@ -35,8 +35,8 @@ ColorCalibrate::ColorCalibrate(DataManager::ptr dataManager, QWidget *parent) :
             this, SLOT(updateThresholdedImage()));
     leftLayout->addWidget(&channelImage);
 
-    dataManager->connectSlotToMObject(&channelImage,
-                 SLOT(updateView()), MIMAGE_ID);
+    dataManager->connectSlotToMObject(image,
+                 SLOT(updateBitmap()), MIMAGE_ID);
 
     QVBoxLayout* rightLayout = new QVBoxLayout;
 
