@@ -10,6 +10,7 @@ BMPImageViewer::BMPImageViewer(image::BMPImage* image,
                                QWidget *parent)
     : QWidget(parent), image(image) {
     setupUI();
+    connect(image, SIGNAL(bitmapBuilt()), this, SLOT(updateView()));
 }
 
 BMPImageViewer::~BMPImageViewer() {
@@ -23,7 +24,6 @@ void BMPImageViewer::setupUI() {
 
 void BMPImageViewer::updateView() {
     if (this->isVisible()) {
-        image->updateBitmap();
         QPixmap* qimage = image->getBitmap();
         if (qimage) {
             imagePlaceholder.setPixmap(*qimage);

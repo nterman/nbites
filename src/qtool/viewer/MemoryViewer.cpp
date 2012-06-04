@@ -12,21 +12,25 @@ using namespace qtool::image;
 
 MemoryViewer::MemoryViewer(RobotMemoryManager::const_ptr memoryManager) :
                  memoryManager(memoryManager) {
+    
     MImage::const_ptr rawMImage = memoryManager->getMemory()->getMImage();
     FastYUVToBMPImage* rawBMP = new FastYUVToBMPImage(rawMImage, this);
 
 
     BMPImageViewer* imageViewer;
-
-      VisualInfoImage* shapes = new VisualInfoImage(memoryManager->getMemory()->getMVision());
-      OverlayedImage* combo = new OverlayedImage(rawBMP, shapes, this);
     
-      imageViewer = new BMPImageViewer(combo, this);
+    MVision::const_ptr visionData = memoryManager->getMemory()->getMVision();
+    VisualInfoImage* shapes = new VisualInfoImage(visionData);
+    OverlayedImage* combo = new OverlayedImage(rawBMP, shapes, this);
+    
+    imageViewer = new BMPImageViewer(combo, this);
 
   
     this->setCentralWidget(imageViewer);
-    memoryManager->connectSlotToMObject(imageViewer,
-                        SLOT(updateView()), MIMAGE_ID);
+    memoryManager->connectSlotToMObject(rawBMP,
+                        SLOT(updateBitmap()), MIMAGE_ID);
+    memoryManager->connectSlotToMObject(shapes,
+			SLOT(updateBitmap()), MVISION_ID);
 
 
     //corner ownership

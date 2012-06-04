@@ -58,7 +58,8 @@ public:
        BMPImage(parent),
        baseImage(baseImage),
        overlayedImage(overlayedImage) {
-
+	 connect(baseImage, SIGNAL(bitmapBuilt()), this, SLOT(updateBitmap()));
+	 connect(overlayedImage, SIGNAL(bitmapBuilt()), this, SLOT(updateBitmap()));
        }
 
     virtual unsigned getWidth() const { return baseImage->getWidth(); }
@@ -67,7 +68,6 @@ public:
 protected:
     virtual void buildBitmap() {
 
-        baseImage->updateBitmap();
 
         if (bitmap.height() < getHeight() || bitmap.width() < getWidth()) {
             bitmap = QPixmap(getWidth(), getHeight());
@@ -77,7 +77,6 @@ protected:
 
         painter.drawPixmap(0, 0, *(baseImage->getBitmap()));
         if (overlayedImage) {
-            overlayedImage->updateBitmap();
             painter.drawPixmap(baseImage->getBitmap()->rect(), *(overlayedImage->getBitmap()));
         }
     }
